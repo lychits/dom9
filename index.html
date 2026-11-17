@@ -350,6 +350,22 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 120px;min-height:70vh;widt
 @media (min-width:1024px){.dock{display:none}}
 @media (max-width:560px){.tile .v{font-size:20px}}
 .seg button{white-space:nowrap}
+.ch-scroll{overflow-x:auto;padding-bottom:6px}
+.ch-grid{border-collapse:separate;border-spacing:3px;margin:0 auto}
+.ch-grid td,.ch-grid th{padding:0}
+.ch-fl{font:500 11px var(--font-mono);color:var(--fg-3);width:22px;text-align:center}
+.ch-gap{width:18px}.ch-pdiv{width:6px}
+.ch-cell{position:relative;width:46px;height:34px;border:1px solid transparent;border-radius:8px;font:600 12.5px var(--font);color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s,box-shadow .12s,opacity .12s}
+.ch-cell:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.ch-cell.wide{width:auto;min-width:64px;padding:0 10px;height:32px;font-size:12px}
+.ch-cell.c-empty{background:transparent;cursor:default;box-shadow:none;transform:none}
+.c-one{background:var(--accent-soft)}.c-share{background:var(--warn-soft)}.c-gov{background:var(--bg-4)}.c-miss{background:var(--crit-soft);color:var(--crit)}.c-com{background:var(--info-soft)}
+.ch-cell.hit{outline:2px solid var(--accent);outline-offset:1px}.ch-cell.dim{opacity:.22}
+.ch-ph{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.ch-porch{text-align:center;padding-top:6px!important}.ch-porch b{display:block;font-size:12px}.ch-porch span{font:400 10.5px var(--font-mono);color:var(--fg-3)}
+.ch-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--fg-2);margin-bottom:12px}.ch-legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-2px}.ch-legend i.ch-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);vertical-align:0}
+.ch-sub{font-size:12px;color:var(--fg-3);margin:16px 0 8px}.ch-nonres{display:flex;flex-wrap:wrap;gap:6px}
+.model-card{padding:0;overflow:hidden}.model-card iframe{display:block;width:100%;height:calc(100dvh - 240px);min-height:520px;border:0;background:var(--bg)}
 .lock{display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px dashed var(--line-2);border-radius:var(--r);background:var(--bg-2)}
 .lock svg{width:22px;height:22px;flex:none;color:var(--accent)}.lock div{display:grid;gap:2px;flex:1}.lock b{font-size:14px}.lock span{font-size:12.5px;color:var(--fg-2)}
 @media (max-width:640px){.lock{flex-wrap:wrap}}
@@ -374,6 +390,8 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 120px;min-height:70vh;widt
   </div>
   <div class="help"><b>Вопрос председателю</b><span>Конфиденциально, без ФИО и номера квартиры. Ответ придёт в кабинет.</span><button class="btn btn-sm" data-go="more/anon">Написать</button></div>
   <div class="foot">
+    <a href="#more/chess" data-nav="more/chess" class="cnl" hidden><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>Шахматка</a>
+    <a href="#more/model" data-nav="more/model" class="cnl" hidden><svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>3D-модель</a>
     <a href="#more/admin" data-nav="more/admin" id="admLink" hidden><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>Администрирование</a>
     <a href="#more/profile" data-nav="more/profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Профиль и уведомления</a>
   </div>
@@ -418,7 +436,7 @@ const DRIVE='https://drive.google.com/';
 const F=id=>DRIVE+'file/d/'+id+'/view';
 const FOLD=id=>DRIVE+'drive/folders/'+id;
 let folders={},files={},META={updatedAt:'',lastDoc:'2026-01-01',lastAct:'2026-01-01',balAct:0,rate:550000,source:''},MONTHS=[],YEARS=[],CONTRACTORS=[],NOTES2026={},OPS2026=[],WORKS=[],APPEALS=[],EVENTS=[],DOCS=[],TAGS=[],DIRECTORY=[],
-  STATUS_EXTRA=[],DATES=[],DATES_COUNCIL=[],TODO=[],TRANSP=[],OSS=[],COUNCIL={lead:'',rows:[]},ABOUT={lead:'',tiles:[],property:[]},CONTACTS=[],DEFECTS={},BASE_GROUPS={},API='',GENERATED='',LOCATION={},HISTORY={facts:[]};
+  STATUS_EXTRA=[],DATES=[],DATES_COUNCIL=[],TODO=[],TRANSP=[],OSS=[],COUNCIL={lead:'',rows:[]},ABOUT={lead:'',tiles:[],property:[]},CONTACTS=[],DEFECTS={},BASE_GROUPS={},API='',GENERATED='',LOCATION={},HISTORY={facts:[]},CHESS=null;
 /* AUTH: {token,email,name,flat,role:'owner'|'council'|'admin'} — выдаётся сервером (Apps Script) после входа по коду */
 let AUTH=null;
 const SESSION_KEY='dom9.session';
@@ -428,7 +446,7 @@ function applyData(d){
   const m={meta:v=>META=Object.assign({},META,v),months:v=>MONTHS=v,years:v=>YEARS=v,contractors:v=>CONTRACTORS=v,notes2026:v=>NOTES2026=v,ops2026:v=>OPS2026=v,
     works:v=>WORKS=v,appeals:v=>APPEALS=v,events:v=>EVENTS=v,docs:v=>DOCS=v,tags:v=>TAGS=v,directory:v=>DIRECTORY=v,status_extra:v=>STATUS_EXTRA=v,dates:v=>DATES=v,
     dates_council:v=>DATES_COUNCIL=v,docs_council:v=>DOCS=DOCS.concat(v.map(x=>Object.assign({council:true},x))),todo:v=>TODO=v,transparency:v=>TRANSP=v,oss:v=>OSS=v,council:v=>COUNCIL=v,
-    about:v=>ABOUT=v,contacts:v=>CONTACTS=v,defects:v=>DEFECTS=v,base_groups:v=>BASE_GROUPS=v,folders:v=>folders=v,files:v=>files=v,api:v=>{if(v)API=v;},generatedAt:v=>GENERATED=v,location:v=>LOCATION=v,history:v=>HISTORY=v};
+    about:v=>ABOUT=v,contacts:v=>CONTACTS=v,defects:v=>DEFECTS=v,base_groups:v=>BASE_GROUPS=v,folders:v=>folders=v,files:v=>files=v,api:v=>{if(v)API=v;},generatedAt:v=>GENERATED=v,location:v=>LOCATION=v,history:v=>HISTORY=v,chess:v=>CHESS=v};
   ['public','closed','council'].forEach(tier=>{const t=d[tier];if(t)Object.keys(t).forEach(k=>{if(m[k])m[k](t[k]);});});
   Object.keys(d).forEach(k=>{if(m[k]&&!['public','closed','council'].includes(k))m[k](d[k]);});
   const fac=WORKS.find(w=>w.id==='facade');
@@ -794,12 +812,14 @@ const MORE=[
  ['directory','Справочник «Куда обращаться»','навигатор по ситуациям с эскалацией','<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>'],
  ['about','О доме','паспорт, история, галерея','<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-7h6v7"/>'],
  ['contacts','Контакты','экстренные службы, УК, совет дома, надзор','<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>'],
+ ['chess','Шахматка и контакты','только совет: помещения, собственники, контакты','<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>'],
+ ['model','3D-модель дома','только совет: конструктив, сечения, сети','<path d="M12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>'],
  ['access','Запросить доступ','для собственников, которых нет в списке','<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'],
  ['profile','Профиль и вход','роль, сессия, уведомления','<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>']
 ];
 function moreView(sub){
   if(!sub)return `<div class="view stagger"><div class="page-head"><div><p class="eyebrow">Ещё</p><h1>Разделы кабинета</h1></div></div>
-  <div class="menu">${(isAdmin()?MORE.concat([['admin','Администрирование','данные, источники, доступы, входящие','<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>']]):MORE).filter(m=>!(m[0]==='access'&&AUTH)).map(m=>`<button data-go="more/${m[0]}"><span class="ico"><svg viewBox="0 0 24 24">${m[3]}</svg></span><span><b>${m[1]}</b><span>${m[2]}</span></span><span class="arr">›</span></button>`).join('')}</div></div>`;
+  <div class="menu">${(isAdmin()?MORE.concat([['admin','Администрирование','данные, источники, доступы, входящие','<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>']]):MORE).filter(m=>!(m[0]==='access'&&AUTH)&&!((m[0]==='chess'||m[0]==='model')&&!isCouncil())).map(m=>`<button data-go="more/${m[0]}"><span class="ico"><svg viewBox="0 0 24 24">${m[3]}</svg></span><span><b>${m[1]}</b><span>${m[2]}</span></span><span class="arr">›</span></button>`).join('')}</div></div>`;
   const back='<button class="back" data-go="more">‹ Все разделы</button>';
   switch(sub){
     case 'appeals':return `<div class="view stagger">${back}<div class="page-head"><div><p class="eyebrow">Обращения и заявки</p><h1>Реестр обращений совета дома</h1><p class="lead">Публичная часть реестра без персональных данных заявителей: куда, когда и с каким результатом направлялся каждый вопрос.</p></div><div class="actions"><button class="btn btn-primary btn-sm" data-go="more/appeal">Сообщить о проблеме</button></div></div>
@@ -840,6 +860,8 @@ function moreView(sub){
       </div></div>`;
     case 'profile':return profileView(back);
     case 'admin':return adminView(back);
+    case 'chess':return chessView(back);
+    case 'model':return modelView(back);
     case 'access':return accessView(back);
   }
   return moreView();
@@ -888,7 +910,10 @@ const GUEST_LOCKED={finance:['Финансы дома','Средства дом�
   'more/council':['Совет дома и ОСС','Состав совета, решения общих собраний, выборы.'],
   'more/ideas':['Предложения жителей','Идеи собственников и поддержка соседей.'],
   'more/appeal':['Сообщить о проблеме','Заявка с номером, категорией и сроком.'],
-  'more/anon':['Сообщение председателю','Конфиденциальный вопрос председателю совета дома.']};
+  'more/anon':['Сообщение председателю','Конфиденциальный вопрос председателю совета дома.'],
+  'more/chess':['Шахматка дома','Помещения, собственники по реестру и контакты — для совета дома.'],
+  'more/model':['3D-модель дома','Интерактивная модель здания — для совета дома.']};
+const COUNCIL_ONLY={'more/chess':1,'more/model':1};
 function lockedView(route){const [t,d]=GUEST_LOCKED[route];return `<div class="view stagger"><div class="page-head"><div><p class="eyebrow">Кабинет собственника</p><h1>${t}</h1><p class="lead">${d}</p></div></div>${LOCK('Раздел доступен собственникам помещений дома после входа')}</div>`;}
 function guestHomeView(){
   const tiles=(ABOUT.tiles||[]).slice(0,8);
@@ -911,6 +936,59 @@ function guestHomeView(){
     <div class="contacts">${CONTACTS.map(c=>`<div class="contact"><b>${esc(c.b)}</b><span class="tel">${esc(c.tel)}</span><span>${esc(c.s)}</span></div>`).join('')}</div></div>
   <div class="sec">${LOCK('Кабинет собственника: деньги дома, работы, обращения, документы и совет дома — после входа')}</div>
   </div>`;
+}
+
+/* ================= СОВЕТ: ШАХМАТКА ================= */
+const CH={f:'all',q:'',tab:'board'};
+function chUnit(id){return CHESS&&id!=null?CHESS.units[String(id)]:null;}
+function chContacts(id){return (CHESS&&CHESS.contacts[String(id)])||[];}
+function chCls(id){if(id==null)return 'c-empty';const u=chUnit(id);if(!u)return 'c-miss';if(u.kind!=='жилое')return 'c-com';
+  if(u.owners.some(o=>/Департамент|государств|город Москва/i.test(o.form+o.name)))return 'c-gov';if(new Set(u.owners.map(o=>o.name)).size>1)return 'c-share';return 'c-one';}
+function chMatch(id){if(id==null)return false;const u=chUnit(id);
+  if(CH.f==='share'&&chCls(id)!=='c-share')return false;if(CH.f==='gov'&&chCls(id)!=='c-gov')return false;if(CH.f==='one'&&chCls(id)!=='c-one')return false;if(CH.f==='cont'&&!chContacts(id).length)return false;
+  if(!CH.q)return true;const q=CH.q.toLowerCase(),qd=q.replace(/\D/g,'');
+  if(String(id).toLowerCase()===q||String(id).toLowerCase().startsWith(q))return true;
+  if(u&&u.owners.some(o=>o.name.toLowerCase().includes(q)))return true;
+  return chContacts(id).some(c=>[c.name,c.email,c.role,c.note].some(v=>(v||'').toLowerCase().includes(q))||(qd.length>=4&&(c.phone||'').replace(/\D/g,'').includes(qd)));}
+function chCell(id){if(id==null)return '<td><div class="ch-cell c-empty"></div></td>';const on=(CH.q||CH.f!=='all');const hit=on&&chMatch(id),dim=on&&!chMatch(id);
+  const u=chUnit(id);const hasC=chContacts(id).length;
+  return `<td><button class="ch-cell ${chCls(id)} ${hit?'hit':''} ${dim?'dim':''}" data-apt="${id}" title="${u?esc(id+' · '+u.area+' м² · '+u.owners.map(o=>o.name).join(', ')):id+' · нет в реестре'}">${id}${hasC?'<i class="ch-ph"></i>':''}</button></td>`;}
+function chBoard(){const P=CHESS.porch;const groups=[[9,8],[6,5,4,7],[3,2,1]];let h='';
+  for(let fl=8;fl>=1;fl--){h+=`<tr><th class="ch-fl">${fl}</th>`;groups.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';g.forEach((pp,pi)=>{if(pi)h+='<td class="ch-pdiv"></td>';const pair=(P[String(pp)]||{})[String(fl)]||[null,null];pair.forEach(id=>h+=chCell(id));});});h+=`<th class="ch-fl">${fl}</th></tr>`;}
+  h+='<tr><th></th>';groups.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';g.forEach((pp,pi)=>{if(pi)h+='<td class="ch-pdiv"></td>';const r=CHESS.porch_ranges[String(pp)]||['',''];h+=`<td colspan="2" class="ch-porch"><b>П${pp}</b><span>${r[0]}–${r[1]}</span></td>`;});});h+='<th></th></tr>';
+  return `<div class="ch-scroll"><table class="ch-grid">${h}</table></div>`;}
+function chessView(back){
+  if(!isCouncil())return `<div class="view stagger">${back}${LOCK('Шахматка с контактами — только для совета дома')}</div>`;
+  if(!CHESS)return `<div class="view stagger">${back}<div class="lock"><div><b>Шахматка не загрузилась</b><span>Обновите страницу. Если не помогло — проверьте файл chess_*.json в папке «Шахматка и модель (только совет)».</span></div></div></div>`;
+  const U=Object.values(CHESS.units),liv=U.filter(u=>u.kind==='жилое').length,nr=U.length-liv,nc=Object.values(CHESS.contacts).reduce((s,v)=>s+v.length,0),ca=Object.keys(CHESS.contacts).filter(k=>/^\d+$/.test(k)).length;
+  const others=Object.keys(CHESS.contacts).filter(k=>!CHESS.units[k]&&!/^\d+$/.test(k));
+  return `<div class="view stagger">${back}<div class="page-head"><div><p class="eyebrow">Только совет дома · персональные данные</p><h1>Шахматка дома</h1><p class="lead">Реестр собственников на ${esc(CHESS.meta.as_of||'')} и контакты жителей${CHESS.contactsUpdated?' (обновлены '+esc(CHESS.contactsUpdated)+')':''}. Подъезды по развёртке двора: 9, 8 · 6, 5, 4, 7 · 3, 2, 1.</p></div></div>
+  <div class="grid g4 keep2"><div class="tile"><span class="l">Жилых в реестре</span><span class="v">${liv}</span></div><div class="tile"><span class="l">Нежилых</span><span class="v">${nr}</span></div><div class="tile"><span class="l">Квартир с контактами</span><span class="v">${ca}</span></div><div class="tile"><span class="l">Контактов всего</span><span class="v">${nc}</span></div></div>
+  <div class="seg" id="chTabs" style="margin-top:14px"><button data-t="board" class="${CH.tab==='board'?'on':''}">Шахматка</button><button data-t="events" class="${CH.tab==='events'?'on':''}">Хронология собственников</button></div>
+  ${CH.tab==='board'?`<div class="search" style="margin-top:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="chQ" type="search" placeholder="Квартира, ФИО, телефон, e-mail…" value="${esc(CH.q)}" autocomplete="off"></div>
+  <div class="filters" id="chF">${[['all','Все'],['one','Один собственник'],['share','Долевые'],['gov','Город'],['cont','С контактами']].map(f=>`<button data-f="${f[0]}" class="${CH.f===f[0]?'on':''}">${f[1]}</button>`).join('')}</div>
+  <div class="card" style="margin-top:12px"><div class="ch-legend"><span><i class="c-one"></i>один собственник</span><span><i class="c-share"></i>несколько</span><span><i class="c-gov"></i>город</span><span><i class="c-miss"></i>нет в реестре</span><span><i class="ch-dot"></i>есть контакт</span></div>${chBoard()}
+    <div class="ch-sub">Нежилые помещения и надстройка</div><div class="ch-nonres">${CHESS.nonres.concat(CHESS.units['127']?['127']:[]).map(id=>{const on=(CH.q||CH.f!=='all');return `<button class="ch-cell wide ${chCls(id)} ${on&&chMatch(id)?'hit':''} ${on&&!chMatch(id)?'dim':''}" data-apt="${esc(id)}">${esc(id)}${chContacts(id).length?'<i class="ch-ph"></i>':''}</button>`;}).join('')}</div>
+    ${others.length?`<div class="ch-sub">Контакты без квартиры</div><div class="rows">${others.map(k=>chContacts(k).map(c=>`<div class="row" style="cursor:default"><span class="t">${esc(c.name)}</span><span class="chip plain">${esc(k)}</span><span class="d">${c.phone?`<a href="tel:${esc(String(c.phone).replace(/[^+\d]/g,''))}">${esc(c.phone)}</a>`:''} ${esc(c.role||'')}</span></div>`).join('')).join('')}</div>`:''}
+    <p class="note" style="margin-top:12px">${infoIcon}<span>${esc(CHESS.meta.layout_note||'')}</span></p></div>`
+  :`<div class="card" style="margin-top:12px"><div class="rows">${CHESS.events.map(e=>`<div class="row" data-apt="${esc(e.apt)}"><span class="t">Кв. ${esc(e.apt)} · ${esc(e.kind)}</span><span class="chip info">П${esc(e.porch)} · ${esc(e.floor)} эт.</span><span class="d">${esc(e.when||e.period||'')} · было: ${esc(e.was)} → стало: ${esc(e.now)}${e.comment?' · '+esc(e.comment):''}</span></div>`).join('')}</div></div>`}
+  <p class="note" style="margin-top:12px">${infoIcon}<span>Персональные данные собственников и жителей. Используются советом дома только для подготовки ОСС и связи с собственниками (ст. 45–48 ЖК РФ); не пересылайте и не публикуйте.</span></p></div>`;
+}
+function openApt(id){const u=chUnit(id);const cs=chContacts(id);const ev=(CHESS.events||[]).filter(e=>String(e.apt)===String(id));
+  const ix=Object.entries(CHESS.porch).find(([pp,fls])=>Object.values(fls).some(pr=>pr.map(String).includes(String(id))));
+  openSheet(`<p class="eyebrow">${ix?'Подъезд '+ix[0]:'Помещение'}${u?' · '+esc(u.kind):''}</p><h2>${/^\d+$/.test(id)?'Квартира ':''}${esc(id)}</h2>
+  ${u?`<span class="chip ${chCls(id)==='c-share'?'warn':chCls(id)==='c-gov'?'plain':'ok'}">${u.area} м² · ${u.owners.length} ${u.owners.length===1?'собственник':'собственника'}</span>
+  <h3 style="margin:14px 0 8px">Собственники по реестру</h3><div class="rows">${u.owners.map(o=>`<div class="row" style="cursor:default"><span class="t">${esc(o.name)}</span><span class="chip plain">${o.share?Math.round(o.share*1000)/10+' %':esc(o.form)}</span><span class="d">${esc(o.form)}${o.area?' · '+o.area+' м²':''}${o.title?' · '+esc(o.title):''}</span></div>`).join('')}</div>`:'<p class="muted">В реестре собственников этого помещения нет.</p>'}
+  <h3 style="margin:14px 0 8px">Контакты</h3>${cs.length?`<div class="rows">${cs.map(c=>`<div class="row" style="cursor:default"><span class="t">${esc(c.name)}</span>${c.role?`<span class="chip info">${esc(c.role)}</span>`:'<span></span>'}<span class="d">${c.phone?`<a href="tel:${esc(String(c.phone).replace(/[^+\d]/g,''))}">${esc(c.phone)}</a> · `:''}${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a> · `:''}${/^@/.test(c.note||'')?`<a target="_blank" rel="noopener" href="https://t.me/${esc(c.note.slice(1))}">${esc(c.note)}</a>`:esc(c.note||'')}${c.added?' · добавлено '+esc(c.added):''}</span></div>`).join('')}</div>`:'<p class="muted">Контактов нет.</p>'}
+  ${ev.length?`<h3 style="margin:14px 0 8px">Смена собственников</h3><ul class="tl">${ev.map(e=>`<li><span class="dt">${esc(e.when||e.period)}</span><span class="ev">${esc(e.kind)}: ${esc(e.was)} → ${esc(e.now)}</span></li>`).join('')}</ul>`:''}`);}
+
+/* ================= СОВЕТ: 3D-МОДЕЛЬ ================= */
+function modelView(back){
+  if(!isCouncil())return `<div class="view stagger">${back}${LOCK('3D-модель дома — только для совета дома')}</div>`;
+  return `<div class="view stagger">${back}<div class="page-head"><div><p class="eyebrow">Только совет дома</p><h1>3D-модель дома</h1><p class="lead">Архитектурная модель по архивным чертежам и паспорту фасадов: конструктив, этажи, сечения, фундаменты, двор, инженерные сети, элементы капремонта фасада.</p></div>
+    <div class="actions"><a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="model/index.html">На весь экран</a><a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://drive.google.com/drive/folders/1jjTxew4dKWSWBuJ4ZgQccKEx4LHZMk23">Материалы модели</a></div></div>
+  <div class="card model-card"><iframe src="model/index.html" title="3D-модель дома" allow="fullscreen" loading="lazy"></iframe></div>
+  <p class="note" style="margin-top:12px">${infoIcon}<span>Геометрия загружается с сервера кабинета только после входа совета дома; первая загрузка — несколько секунд, дальше модель хранится в браузере. Модель не заменяет обмеры.</span></p></div>`;
 }
 
 /* ================= API ================= */
@@ -940,7 +1018,7 @@ function bindLogin(){
 
 /* ================= ROUTER ================= */
 const titles={home:'Главная',finance:'Финансы',works:'Работы',docs:'Документы',more:'Ещё'};
-const subTitles={admin:'Администрирование',access:'Запросить доступ',appeals:'Обращения',appeal:'Сообщить о проблеме',council:'Совет дома и ОСС',ideas:'Предложения',anon:'Сообщение председателю',directory:'Справочник',about:'О доме',contacts:'Контакты',profile:'Профиль'};
+const subTitles={chess:'Шахматка',model:'3D-модель',admin:'Администрирование',access:'Запросить доступ',appeals:'Обращения',appeal:'Сообщить о проблеме',council:'Совет дома и ОСС',ideas:'Предложения',anon:'Сообщение председателю',directory:'Справочник',about:'О доме',contacts:'Контакты',profile:'Профиль'};
 let current='';
 function render(route){
   const [sec,sub]=route.split('/');
@@ -965,6 +1043,7 @@ document.addEventListener('click',e=>{
   const o=e.target.closest('[data-op]');if(o){openOp(+o.dataset.op);return;}
   const a=e.target.closest('[data-appeal]');if(a){openAppeal(a.dataset.appeal);return;}
   const l=e.target.closest('[data-login]');if(l){e.preventDefault();openLogin();return;}
+  const ap=e.target.closest('[data-apt]');if(ap&&CHESS){openApt(ap.dataset.apt);return;}
 });
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();go('docs');setTimeout(()=>{const i=$('#docQ');if(i)i.focus();},80);}});
 
@@ -1020,6 +1099,11 @@ function afterRender(sec,sub){
     try{const j=await api('submit',{kind,payload:fn()});box.innerHTML='<b>Принято · № '+esc(j.n)+'</b><span class="small">'+(kind==='access'?'Председатель проверит данные и откроет доступ — придёт письмо.':'Номер сохраните для отслеживания. Председатель получил уведомление.')+'</span>';box.hidden=false;f.reset();toast('Отправлено');}
     catch(err){box.innerHTML='<b>Не отправлено</b><span class="small">'+esc(err.message)+'</span>';box.hidden=false;}finally{btn.disabled=false;}});});
   if(sec==='more'&&sub==='profile'){const lo=$('#logoutBtn');if(lo)lo.addEventListener('click',async()=>{try{await api('logout');}catch(e){}setSession(null);state.preview='self';save();location.hash='home';location.reload();});bindLogin();}
+  if(sec==='more'&&sub==='chess'&&CHESS){
+    const t=$('#chTabs');if(t)t.addEventListener('click',e=>{const x=e.target.closest('button');if(!x)return;CH.tab=x.dataset.t;render('more/chess');});
+    const fl=$('#chF');if(fl)fl.addEventListener('click',e=>{const x=e.target.closest('button');if(!x)return;CH.f=x.dataset.f;render('more/chess');});
+    const q=$('#chQ');if(q){q.addEventListener('input',()=>{CH.q=q.value.trim();clearTimeout(window._chT);window._chT=setTimeout(()=>{render('more/chess');const n=$('#chQ');if(n){n.focus();n.setSelectionRange(n.value.length,n.value.length);}},250);});}
+  }
   if(sec==='more'&&sub==='admin'&&isAdmin()){
     if(!ADMIN_CACHE)api('admin_status').then(j=>{ADMIN_CACHE=j.status;render('more/admin');}).catch(e=>toast(e.message));
     const rb=$('#admRebuild');if(rb)rb.addEventListener('click',async()=>{rb.disabled=true;toast('Сборка…');try{const j=await api('admin_rebuild');ADMIN_CACHE=j.status;toast('Опубликовано');render('more/admin');}catch(e){toast(e.message);}finally{rb.disabled=false;}});
@@ -1057,6 +1141,7 @@ function openAppeal(n){const a=APPEALS.find(x=>x.n===n);if(!a)return;
 function updateTop(){
   const pv=AUTH&&state.preview&&state.preview!=='self'&&realRole()!=='owner';$('#roleName').textContent=AUTH?ROLE_RU[pv?viewRole():realRole()]:'Войти';$('#roleLong').textContent=AUTH?(pv?'Просмотр: ':'Роль: '):'';
   const al=$('#admLink');if(al)al.hidden=!isAdmin();
+  document.querySelectorAll('.cnl').forEach(x=>x.hidden=!isCouncil());
   $('#roleBtn').classList.toggle('on',!!AUTH);const av=$('#avatar');
   if(AUTH){av.hidden=false;const n=(AUTH.name||AUTH.email||'?').split(/\s+/);av.textContent=(n[0][0]+(n[1]?n[1][0]:'')).toUpperCase();av.title=(AUTH.name||AUTH.email)+(AUTH.flat?' · кв. '+AUTH.flat:'');}else{av.hidden=true;}
 }
