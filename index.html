@@ -1020,6 +1020,7 @@ function bindLogin(){
 const titles={home:'Главная',finance:'Финансы',works:'Работы',docs:'Документы',more:'Ещё'};
 const subTitles={chess:'Шахматка',model:'3D-модель',admin:'Администрирование',access:'Запросить доступ',appeals:'Обращения',appeal:'Сообщить о проблеме',council:'Совет дома и ОСС',ideas:'Предложения',anon:'Сообщение председателю',directory:'Справочник',about:'О доме',contacts:'Контакты',profile:'Профиль'};
 let current='';
+let RENDER_SEQ=0;
 function render(route){
   const [sec,sub]=route.split('/');
   let html='';
@@ -1028,7 +1029,8 @@ function render(route){
   else if(!MONTHS.length&&(GUEST_LOCKED[route]||!sec||sec==='home'))html='<div class="view"><div class="lock"><div><b>Закрытые данные не загрузились</b><span>Проверьте интернет и обновите страницу. Если не помогло — выйдите и войдите снова.</span></div></div></div>';
   else switch(sec){case 'finance':html=financeView();break;case 'works':html=worksView();break;case 'docs':html=docsView();break;case 'more':html=moreView(sub);break;default:html=homeView();}
   const paint=()=>{view.innerHTML=html;stripDead(view);afterRender(sec,sub);window.scrollTo(0,0);};
-  if(document.startViewTransition&&current&&!matchMedia('(prefers-reduced-motion: reduce)').matches){document.startViewTransition(paint);}else{paint();}
+  const tok=++RENDER_SEQ;let done=false;const p2=()=>{if(done||tok!==RENDER_SEQ)return;done=true;paint();};
+  if(document.startViewTransition&&current&&!document.hidden&&!matchMedia('(prefers-reduced-motion: reduce)').matches){try{const t=document.startViewTransition(p2);['ready','finished','updateCallbackDone'].forEach(k=>t[k]&&t[k].catch(()=>{}));}catch(e){p2();}setTimeout(p2,300);}else{p2();}
   current=route;
   dock.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.go===(sec||'home')));
   document.querySelectorAll('.side a[data-nav]').forEach(a=>a.classList.toggle('on',a.dataset.nav===route||(a.dataset.nav===sec&&!sub)));
