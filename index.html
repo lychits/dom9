@@ -373,7 +373,8 @@ a.row{color:inherit;text-decoration:none}
 .ch-cell:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
 .ch-cell.wide{width:auto;min-width:64px;padding:0 10px;height:32px;font-size:12px}
 .ch-cell.c-empty{background:transparent;cursor:default;box-shadow:none;transform:none}
-.c-one{background:var(--accent-soft)}.c-share{background:var(--warn-soft)}.c-gov{background:var(--bg-4)}.c-miss{background:var(--crit-soft);color:var(--crit)}.c-com{background:var(--info-soft)}
+.c-one{background:var(--accent-soft)}.c-share{background:var(--warn-soft)}.c-gov{background:repeating-linear-gradient(135deg,var(--crit-soft) 0 5px,var(--bg-2) 5px 8px);border:1.5px solid var(--crit)!important;color:var(--crit)}
+.c-oi{background:var(--ok-soft);border:1.5px dashed var(--ok)!important;color:var(--ok)}.c-miss{background:var(--crit-soft);color:var(--crit)}.c-com{background:var(--info-soft)}
 .ch-cell.hit{outline:2px solid var(--accent);outline-offset:1px}.ch-cell.dim{opacity:.22}
 .ch-ph{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
 .ch-porch{text-align:center;padding-top:6px!important}.ch-porch b{display:block;font-size:12px}.ch-porch span{font:400 10.5px var(--font-mono);color:var(--fg-3)}
@@ -388,6 +389,8 @@ a.row{color:inherit;text-decoration:none}
 .ch-r-tw .ch-void,.ch-r-m .ch-void{background:none}
 .ch-r-b td{padding-top:8px}
 .ch-band{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;border-radius:10px;background:var(--bg-3)}.ch-band>span{font-size:11.5px;color:var(--fg-2);margin-right:4px}.ch-band .ch-cell{width:auto;padding:0 10px}
+.ch-multi{display:flex;gap:3px}.ch-multi .ch-cell{flex:1;min-width:0;padding:0 4px}
+.ch-r-b .ch-cell{font-size:12px}
 .ch-attic{height:34px;display:grid;place-items:center;border-radius:12px 12px 6px 6px;border:1px dashed var(--line-2);color:var(--fg-3);font-size:11.5px}
 .ch-band.one{padding:0;background:none;display:grid;gap:2px}.ch-band.one>span{font-size:10.5px;color:var(--fg-3);text-align:center}.ch-band.one .ch-cell{width:100%}
 .model-card{padding:0;overflow:hidden}.model-card iframe{display:block;width:100%;height:calc(100dvh - 240px);min-height:520px;border:0;background:var(--bg)}
@@ -996,10 +999,10 @@ function guestHomeView(){
 const CH={f:'all',q:'',tab:'board'};
 function chUnit(id){return CHESS&&id!=null?CHESS.units[String(id)]:null;}
 function chContacts(id){return (CHESS&&CHESS.contacts[String(id)])||[];}
-function chCls(id){if(id==null)return 'c-empty';const u=chUnit(id);if(!u)return 'c-miss';if(u.kind!=='жилое')return 'c-com';
-  if(u.owners.some(o=>/Департамент|государств|город Москва/i.test(o.form+o.name)))return 'c-gov';if(new Set(u.owners.map(o=>o.name)).size>1)return 'c-share';return 'c-one';}
+function chCls(id){if(id==null)return 'c-empty';const u=chUnit(id);if(!u)return 'c-miss';if(u.kind==='общее имущество')return 'c-oi';
+  if(u.owners.some(o=>/Департамент|государств|город Москва/i.test(o.form+o.name)))return 'c-gov';if(u.kind!=='жилое')return 'c-com';if(new Set(u.owners.map(o=>o.name)).size>1)return 'c-share';return 'c-one';}
 function chMatch(id){if(id==null)return false;const u=chUnit(id);
-  if(CH.f==='share'&&chCls(id)!=='c-share')return false;if(CH.f==='gov'&&chCls(id)!=='c-gov')return false;if(CH.f==='one'&&chCls(id)!=='c-one')return false;if(CH.f==='cont'&&!chContacts(id).length)return false;
+  if(CH.f==='share'&&chCls(id)!=='c-share')return false;if(CH.f==='gov'&&chCls(id)!=='c-gov')return false;if(CH.f==='oi'&&chCls(id)!=='c-oi')return false;if(CH.f==='one'&&chCls(id)!=='c-one')return false;if(CH.f==='cont'&&!chContacts(id).length)return false;
   if(!CH.q)return true;const q=CH.q.toLowerCase(),qd=q.replace(/\D/g,'');
   if(String(id).toLowerCase()===q||String(id).toLowerCase().startsWith(q))return true;
   if(u&&u.owners.some(o=>o.name.toLowerCase().includes(q)))return true;
@@ -1019,11 +1022,11 @@ function chBoard2(){const B=CHESS.board,P=CHESS.porch,G=B.groups;const LN={'Б':
     if(full){h+=`<td colspan="${G.reduce((n,g)=>n+w(g),0)+G.length-1}"><div class="ch-band"><span>${esc(full.label)}</span>${full.ids.map(id=>chBtn(id,'wide')).join('')}</div></td>`;}
     else G.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';
       const cu=B.custom&&B.custom[lv]&&B.custom[lv][String(gi)];
-      if(cu){cu.forEach(x=>{h+=x.id!=null?chCell(x.id,x.cs>1?x.cs:0).replace('<button class="ch-cell ','<button class="ch-cell wide '):`<td colspan="${x.cs}"></td>`;});return;}
+      if(cu){cu.forEach(x=>{h+=x.id!=null?chCell(x.id,x.cs>1?x.cs:0).replace('<button class="ch-cell ','<button class="ch-cell wide '):x.ids?`<td colspan="${x.cs}"><div class="ch-multi">${x.ids.map(id=>chBtn(id,'wide')).join('')}</div></td>`:`<td colspan="${x.cs}"></td>`;});return;}
       let i=0;
       while(i<g.porches.length){const pp=g.porches[i];if(i)h+='<td class="ch-pdiv"></td>';
         const sp=spanAt(lv,pp);
-        if(sp){const n=sp.porches.filter(x=>g.porches.includes(x)).length;h+=sp.id?`<td colspan="${n*3-1}"><div class="ch-band one">${chBtn(sp.id,'wide')}<span>${esc(sp.label)}</span></div></td>`:`<td colspan="${n*3-1}"><div class="ch-attic">${esc(sp.label)}</div></td>`;i+=n;continue;}
+        if(sp){const n=sp.porches.filter(x=>g.porches.includes(x)).length;h+=sp.id?`<td colspan="${n*3-1}"><div class="ch-band one">${chBtn(sp.id,'wide')}${sp.label?`<span>${esc(sp.label)}</span>`:''}</div></td>`:`<td colspan="${n*3-1}"><div class="ch-attic">${esc(sp.label)}</div></td>`;i+=n;continue;}
         const a=(P[String(pp)]||{})[lv];
         if(!a||!a.length)h+='<td colspan="2"><div class="ch-void"></div></td>';
         else if(a.length===1)h+=chCell(a[0],2);
@@ -1045,8 +1048,8 @@ function chessView(back){
   <div class="grid g4 keep2"><div class="tile"><span class="l">Жилых в реестре</span><span class="v">${liv}</span></div><div class="tile"><span class="l">Нежилых</span><span class="v">${nr}</span></div><div class="tile"><span class="l">Квартир с контактами</span><span class="v">${ca}</span></div><div class="tile"><span class="l">Контактов всего</span><span class="v">${nc}</span></div></div>
   <div class="seg" id="chTabs" style="margin-top:14px"><button data-t="board" class="${CH.tab==='board'?'on':''}">Шахматка</button><button data-t="events" class="${CH.tab==='events'?'on':''}">Хронология собственников</button></div>
   ${CH.tab==='board'?`<div class="search" style="margin-top:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="chQ" type="search" placeholder="Квартира, ФИО, телефон, e-mail…" value="${esc(CH.q)}" autocomplete="off"></div>
-  <div class="filters" id="chF">${[['all','Все'],['one','Один собственник'],['share','Долевые'],['gov','Город'],['cont','С контактами']].map(f=>`<button data-f="${f[0]}" class="${CH.f===f[0]?'on':''}">${f[1]}</button>`).join('')}</div>
-  <div class="card" style="margin-top:12px"><div class="ch-legend"><span><i class="c-one"></i>один собственник</span><span><i class="c-share"></i>несколько</span><span><i class="c-gov"></i>город</span><span><i class="c-miss"></i>нет в реестре</span><span><i class="ch-dot"></i>есть контакт</span>${CHESS.board?'<span><i class="ch-vd"></i>нет этажа</span>':''}</div>${chBoard()}
+  <div class="filters" id="chF">${[['all','Все'],['one','Один собственник'],['share','Долевые'],['gov','Город Москва'],['oi','Общее имущество'],['cont','С контактами']].map(f=>`<button data-f="${f[0]}" class="${CH.f===f[0]?'on':''}">${f[1]}</button>`).join('')}</div>
+  <div class="card" style="margin-top:12px"><div class="ch-legend"><span><i class="c-one"></i>один собственник</span><span><i class="c-share"></i>несколько</span><span><i class="c-com"></i>нежилое частное</span><span><i class="c-gov"></i>г. Москва</span><span><i class="c-oi"></i>общее имущество</span><span><i class="c-miss"></i>нет в реестре</span><span><i class="ch-dot"></i>есть контакт</span>${CHESS.board?'<span><i class="ch-vd"></i>нет этажа</span>':''}</div>${chBoard()}
     ${CHESS.board?'':`<div class="ch-sub">Нежилые помещения и надстройка</div>`}<div class="ch-nonres" ${CHESS.board?'hidden':''}>${CHESS.nonres.concat(CHESS.units['127']?['127']:[]).map(id=>{const on=(CH.q||CH.f!=='all');return `<button class="ch-cell wide ${chCls(id)} ${on&&chMatch(id)?'hit':''} ${on&&!chMatch(id)?'dim':''}" data-apt="${esc(id)}">${esc(id)}${chContacts(id).length?'<i class="ch-ph"></i>':''}</button>`;}).join('')}</div>
     ${others.length?`<div class="ch-sub">Контакты без квартиры</div><div class="rows">${others.map(k=>chContacts(k).map(c=>`<div class="row" style="cursor:default"><span class="t">${esc(c.name)}</span><span class="chip plain">${esc(k)}</span><span class="d">${c.phone?`<a href="tel:${esc(String(c.phone).replace(/[^+\d]/g,''))}">${esc(c.phone)}</a>`:''} ${esc(c.role||'')}</span></div>`).join('')).join('')}</div>`:''}
     <p class="note" style="margin-top:12px">${infoIcon}<span>${esc(CHESS.meta.layout_note||'')}</span></p></div>`
