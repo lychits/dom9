@@ -167,6 +167,9 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 120px;min-height:70vh;widt
 .row .d{grid-column:1/-1;font-size:12.5px;color:var(--fg-2)}
 .row .m{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .row:hover .t{color:var(--accent)}
+a.row{color:inherit;text-decoration:none}
+.rp-k{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}.rp-k button{all:unset;cursor:pointer;border-radius:12px;padding:10px 12px;background:var(--bg);border:1px solid var(--line);display:grid;gap:2px}.rp-k b{font-size:24px;font-weight:700;line-height:1}.rp-k span{font-size:12px;color:var(--fg-2)}.rp-k .u b{color:var(--crit)}.rp-k .i b{color:var(--warn)}.rp-k .n b{color:var(--fg-2)}
+.rp-od{color:var(--crit);font-weight:600}
 .rec{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;padding:11px 0;border-top:1px solid var(--line);align-items:start}
 .rec:first-child{border-top:none;padding-top:0}
 .rec:last-child{padding-bottom:0}
@@ -390,6 +393,7 @@ main{max-width:1180px;margin:0 auto;padding:20px 16px 120px;min-height:70vh;widt
   </div>
   <div class="help"><b>Вопрос председателю</b><span>Конфиденциально, без ФИО и номера квартиры. Ответ придёт в кабинет.</span><button class="btn btn-sm" data-go="more/anon">Написать</button></div>
   <div class="foot">
+    <a href="#more/replies" data-nav="more/replies" class="cnl" hidden><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="m4 6 8 6 8-6"/></svg>Проекты писем</a>
     <a href="#more/chess" data-nav="more/chess" class="cnl" hidden><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>Шахматка</a>
     <a href="#more/model" data-nav="more/model" class="cnl" hidden><svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>3D-модель</a>
     <a href="#more/admin" data-nav="more/admin" id="admLink" hidden><svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>Администрирование</a>
@@ -436,7 +440,7 @@ const DRIVE='https://drive.google.com/';
 const F=id=>DRIVE+'file/d/'+id+'/view';
 const FOLD=id=>DRIVE+'drive/folders/'+id;
 let folders={},files={},META={updatedAt:'',lastDoc:'2026-01-01',lastAct:'2026-01-01',balAct:0,rate:550000,source:''},MONTHS=[],YEARS=[],CONTRACTORS=[],NOTES2026={},OPS2026=[],WORKS=[],APPEALS=[],EVENTS=[],DOCS=[],TAGS=[],DIRECTORY=[],
-  STATUS_EXTRA=[],DATES=[],DATES_COUNCIL=[],TODO=[],TRANSP=[],OSS=[],COUNCIL={lead:'',rows:[]},ABOUT={lead:'',tiles:[],property:[]},CONTACTS=[],DEFECTS={},BASE_GROUPS={},API='',GENERATED='',LOCATION={},HISTORY={facts:[]},CHESS=null;
+  STATUS_EXTRA=[],DATES=[],DATES_COUNCIL=[],TODO=[],TRANSP=[],OSS=[],COUNCIL={lead:'',rows:[]},ABOUT={lead:'',tiles:[],property:[]},CONTACTS=[],DEFECTS={},BASE_GROUPS={},API='',GENERATED='',LOCATION={},HISTORY={facts:[]},CHESS=null,REPLIES=null;
 /* AUTH: {token,email,name,flat,role:'owner'|'council'|'admin'} — выдаётся сервером (Apps Script) после входа по коду */
 let AUTH=null;
 const SESSION_KEY='dom9.session';
@@ -446,7 +450,7 @@ function applyData(d){
   const m={meta:v=>META=Object.assign({},META,v),months:v=>MONTHS=v,years:v=>YEARS=v,contractors:v=>CONTRACTORS=v,notes2026:v=>NOTES2026=v,ops2026:v=>OPS2026=v,
     works:v=>WORKS=v,appeals:v=>APPEALS=v,events:v=>EVENTS=v,docs:v=>DOCS=v,tags:v=>TAGS=v,directory:v=>DIRECTORY=v,status_extra:v=>STATUS_EXTRA=v,dates:v=>DATES=v,
     dates_council:v=>DATES_COUNCIL=v,docs_council:v=>DOCS=DOCS.concat(v.map(x=>Object.assign({council:true},x))),todo:v=>TODO=v,transparency:v=>TRANSP=v,oss:v=>OSS=v,council:v=>COUNCIL=v,
-    about:v=>ABOUT=v,contacts:v=>CONTACTS=v,defects:v=>DEFECTS=v,base_groups:v=>BASE_GROUPS=v,folders:v=>folders=v,files:v=>files=v,api:v=>{if(v)API=v;},generatedAt:v=>GENERATED=v,location:v=>LOCATION=v,history:v=>HISTORY=v,chess:v=>CHESS=v};
+    about:v=>ABOUT=v,contacts:v=>CONTACTS=v,defects:v=>DEFECTS=v,base_groups:v=>BASE_GROUPS=v,folders:v=>folders=v,files:v=>files=v,api:v=>{if(v)API=v;},generatedAt:v=>GENERATED=v,location:v=>LOCATION=v,history:v=>HISTORY=v,chess:v=>CHESS=v,replies:v=>REPLIES=v};
   ['public','closed','council'].forEach(tier=>{const t=d[tier];if(t)Object.keys(t).forEach(k=>{if(m[k])m[k](t[k]);});});
   Object.keys(d).forEach(k=>{if(m[k]&&!['public','closed','council'].includes(k))m[k](d[k]);});
   const fac=WORKS.find(w=>w.id==='facade');
@@ -664,12 +668,36 @@ function datesRows(){
   </div>`;
 }
 function greet(){const h=new Date().getHours();const g=h<5?'Доброй ночи':h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер';const n=AUTH&&AUTH.name?AUTH.name.split(' ')[0]:'';return g+(n?', '+esc(n):'');}
+/* ===== Проекты писем: требуют реакции (только совет; данные — из папки Drive, сервер читает её при каждом входе) ===== */
+const RP_P={1:['u','Срочно','crit'],2:['i','Важно','warn'],3:['n','Плановое','plain']};
+function rpDue(r){const m=/(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?/.exec(r.due||'');if(!m)return null;const y=m[3]?+m[3]:new Date().getFullYear();return new Date(y,+m[2]-1,+m[1],23,59);}
+function rpOver(r){const d=rpDue(r);return d&&/^до/i.test(r.due||'')&&d<new Date();}
+function rpSorted(){const a=(REPLIES&&REPLIES.items)||[];return a.slice().sort((x,y)=>(x.p-y.p)||((rpDue(x)||9e15)-(rpDue(y)||9e15)));}
+function rpRow(r){const P=RP_P[r.p]||RP_P[3];return `<a class="row" target="_blank" rel="noopener" href="${esc(r.u)}"><span class="t">${esc(r.t)}</span><span class="chip ${P[2]}">${P[1]}</span><span class="d"><b>${esc(r.to)}</b> · <span class="${rpOver(r)?'rp-od':''}">${esc(r.due||'без срока')}${rpOver(r)?' — просрочено':''}</span>${r.desc?' · '+esc(r.desc):''}</span></a>`;}
+function rpKpi(){const a=(REPLIES&&REPLIES.items)||[];const c=p=>a.filter(r=>r.p===p).length;return `<div class="rp-k">${[1,2,3].map(p=>`<button class="${RP_P[p][0]}" data-go="more/replies"><b>${c(p)}</b><span>${RP_P[p][1]}</span></button>`).join('')}</div>`;}
+function repliesCard(){
+  if(!isCouncil()||!REPLIES)return '';
+  const a=rpSorted(),od=a.filter(rpOver).length;
+  return `<div class="card" style="margin-bottom:12px"><div class="card-h"><div><h2>Требуют реакции</h2><div class="sub">проекты писем совета · ${a.length?plural(a.length,['проект','проекта','проектов']):'нет открытых'}${od?' · <span class="rp-od">'+od+' просрочено</span>':''}</div></div><span class="tag red">только совет</span></div>
+  ${rpKpi()}${a.length?`<div class="rows">${a.slice(0,4).map(rpRow).join('')}</div>`:'<p class="muted">Все письма отправлены — реакций не требуется.</p>'}
+  <div class="actions" style="margin-top:14px"><button class="btn btn-primary btn-sm" data-go="more/replies">Все проекты${a.length>4?' ('+a.length+')':''}</button>${REPLIES.folder?`<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="${esc(REPLIES.folder)}">Папка на диске</a>`:''}</div></div>`;
+}
+function repliesView(back){
+  if(!isCouncil())return `<div class="view stagger">${back}${LOCK('Проекты писем — только для совета дома')}</div>`;
+  const a=rpSorted(),sent=(REPLIES&&REPLIES.sent)||[];
+  const grp=p=>{const l=a.filter(r=>r.p===p);return l.length?`<div class="card" style="margin-top:12px"><div class="card-h"><h2>${RP_P[p][1]}</h2><span class="chip ${RP_P[p][2]}">${l.length}</span></div><div class="rows">${l.map(rpRow).join('')}</div></div>`:'';};
+  return `<div class="view stagger">${back}<div class="page-head"><div><p class="eyebrow">Только совет дома</p><h1>Проекты писем</h1><p class="lead">Ответы и реакции на входящие письма по дому. Список берётся из папки на диске при каждом входе: новый файл в папке — новая строка, перенесли в «Отправлено» — строка ушла.</p></div>${REPLIES&&REPLIES.folder?`<div class="actions"><a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="${esc(REPLIES.folder)}">Открыть папку</a></div>`:''}</div>
+  ${REPLIES?rpKpi():'<div class="lock"><div><b>Список не загрузился</b><span>Сервер ещё не обновлён до версии 6 или папка недоступна.</span></div></div>'}
+  ${[1,2,3].map(grp).join('')}
+  ${sent.length?`<div class="card" style="margin-top:12px"><div class="card-h"><h2>Недавно отправлено</h2></div><div class="rows">${sent.map(r=>`<a class="row" target="_blank" rel="noopener" href="${esc(r.u)}"><span class="t">${esc(r.t)}</span><span class="chip ok">${esc(r.upd)}</span><span class="d">${esc(r.to)}</span></a>`).join('')}</div></div>`:''}
+  <p class="note" style="margin-top:14px">${infoIcon}<span>Имя файла: <b>1-СРОЧНО</b> | <b>2-ВАЖНО</b> | <b>3-ПЛАН</b> · до ДД.ММ · Адресат · Суть. Описание файла на диске — строка «на что / что сделать». Срочно — срок до 3 дней или идёт процессуальный срок; важно — существенно для дома, срок до 2 недель; плановое — без жёсткого срока.</span></p></div>`;
+}
 function homeView(){
   const over=APPEALS.filter(a=>a.st==='warn'||a.st==='crit').length, inwork=WORKS.filter(w=>w.prog<1).length;
   return `<div class="view stagger">
   <div class="page-head"><div><p class="eyebrow">${todayRu()}</p><h1>${greet()}</h1><p class="lead">${AUTH?'Сводка по дому: деньги, работы и обращения — из актов сверки и реестров совета дома.':'Открытая витрина дома: деньги, работы и обращения без персональных данных. Собственники видят больше после входа.'}</p></div>
     <div class="actions"><button class="btn btn-ghost btn-sm" data-go="more/appeal">Сообщить о проблеме</button><button class="btn btn-primary btn-sm" data-go="finance">Финансы</button></div></div>
-  <div class="grid g21">
+  ${repliesCard()}<div class="grid g21">
     <div class="card"><div class="card-h"><div><h2>Средства дома</h2><div class="sub">Договор № 11/22 · ООО «Брендон» · плата за рекламную конструкцию</div></div><span class="pill">${I.cal.replace('<svg','<svg fill="none" stroke="currentColor" stroke-width="2"')}акт ${dateRu(META.lastAct)}</span></div>
       <div class="row2" style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span class="v num" style="font-size:34px;font-weight:700;letter-spacing:-.025em;line-height:1" data-count="${BAL_ACT}">0</span>${delta(pct(BAL_ACT,2504390.85),'с 01.01.2026')}</div>
       <p class="small" style="margin-top:6px">сальдо в пользу собственников по подписанному акту сверки · расчётное на ${dateRu(CALC_DATE)} с начислением по договору — <b>${fmt(BAL_CALC)}</b></p>
@@ -812,6 +840,7 @@ const MORE=[
  ['directory','Справочник «Куда обращаться»','навигатор по ситуациям с эскалацией','<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>'],
  ['about','О доме','паспорт, история, галерея','<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-7h6v7"/>'],
  ['contacts','Контакты','экстренные службы, УК, совет дома, надзор','<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>'],
+ ['replies','Проекты писем','только совет: что требует реакции — срочно, важно, плановое','<path d="M4 4h16v16H4z"/><path d="m4 6 8 6 8-6"/>'],
  ['chess','Шахматка и контакты','только совет: помещения, собственники, контакты','<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>'],
  ['model','3D-модель дома','только совет: конструктив, сечения, сети','<path d="M12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>'],
  ['access','Запросить доступ','для собственников, которых нет в списке','<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'],
@@ -819,7 +848,7 @@ const MORE=[
 ];
 function moreView(sub){
   if(!sub)return `<div class="view stagger"><div class="page-head"><div><p class="eyebrow">Ещё</p><h1>Разделы кабинета</h1></div></div>
-  <div class="menu">${(isAdmin()?MORE.concat([['admin','Администрирование','данные, источники, доступы, входящие','<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>']]):MORE).filter(m=>!(m[0]==='access'&&AUTH)&&!((m[0]==='chess'||m[0]==='model')&&!isCouncil())).map(m=>`<button data-go="more/${m[0]}"><span class="ico"><svg viewBox="0 0 24 24">${m[3]}</svg></span><span><b>${m[1]}</b><span>${m[2]}</span></span><span class="arr">›</span></button>`).join('')}</div></div>`;
+  <div class="menu">${(isAdmin()?MORE.concat([['admin','Администрирование','данные, источники, доступы, входящие','<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/>']]):MORE).filter(m=>!(m[0]==='access'&&AUTH)&&!((m[0]==='chess'||m[0]==='model'||m[0]==='replies')&&!isCouncil())).map(m=>`<button data-go="more/${m[0]}"><span class="ico"><svg viewBox="0 0 24 24">${m[3]}</svg></span><span><b>${m[1]}</b><span>${m[2]}</span></span><span class="arr">›</span></button>`).join('')}</div></div>`;
   const back='<button class="back" data-go="more">‹ Все разделы</button>';
   switch(sub){
     case 'appeals':return `<div class="view stagger">${back}<div class="page-head"><div><p class="eyebrow">Обращения и заявки</p><h1>Реестр обращений совета дома</h1><p class="lead">Публичная часть реестра без персональных данных заявителей: куда, когда и с каким результатом направлялся каждый вопрос.</p></div><div class="actions"><button class="btn btn-primary btn-sm" data-go="more/appeal">Сообщить о проблеме</button></div></div>
@@ -861,6 +890,7 @@ function moreView(sub){
     case 'profile':return profileView(back);
     case 'admin':return adminView(back);
     case 'chess':return chessView(back);
+    case 'replies':return repliesView(back);
     case 'model':return modelView(back);
     case 'access':return accessView(back);
   }
@@ -911,9 +941,10 @@ const GUEST_LOCKED={finance:['Финансы дома','Средства дом�
   'more/ideas':['Предложения жителей','Идеи собственников и поддержка соседей.'],
   'more/appeal':['Сообщить о проблеме','Заявка с номером, категорией и сроком.'],
   'more/anon':['Сообщение председателю','Конфиденциальный вопрос председателю совета дома.'],
+  'more/replies':['Проекты писем','Что требует реакции совета: срочно, важно, плановое.'],
   'more/chess':['Шахматка дома','Помещения, собственники по реестру и контакты — для совета дома.'],
   'more/model':['3D-модель дома','Интерактивная модель здания — для совета дома.']};
-const COUNCIL_ONLY={'more/chess':1,'more/model':1};
+const COUNCIL_ONLY={'more/chess':1,'more/model':1,'more/replies':1};
 function lockedView(route){const [t,d]=GUEST_LOCKED[route];return `<div class="view stagger"><div class="page-head"><div><p class="eyebrow">Кабинет собственника</p><h1>${t}</h1><p class="lead">${d}</p></div></div>${LOCK('Раздел доступен собственникам помещений дома после входа')}</div>`;}
 function guestHomeView(){
   const tiles=(ABOUT.tiles||[]).slice(0,8);
@@ -1018,7 +1049,7 @@ function bindLogin(){
 
 /* ================= ROUTER ================= */
 const titles={home:'Главная',finance:'Финансы',works:'Работы',docs:'Документы',more:'Ещё'};
-const subTitles={chess:'Шахматка',model:'3D-модель',admin:'Администрирование',access:'Запросить доступ',appeals:'Обращения',appeal:'Сообщить о проблеме',council:'Совет дома и ОСС',ideas:'Предложения',anon:'Сообщение председателю',directory:'Справочник',about:'О доме',contacts:'Контакты',profile:'Профиль'};
+const subTitles={replies:'Проекты писем',chess:'Шахматка',model:'3D-модель',admin:'Администрирование',access:'Запросить доступ',appeals:'Обращения',appeal:'Сообщить о проблеме',council:'Совет дома и ОСС',ideas:'Предложения',anon:'Сообщение председателю',directory:'Справочник',about:'О доме',contacts:'Контакты',profile:'Профиль'};
 let current='';
 let RENDER_SEQ=0;
 function render(route){
