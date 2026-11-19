@@ -400,6 +400,33 @@ td[data-roof]{position:relative}td[data-roof=l1]::before{left:47px!important}td[
 .lock{display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px dashed var(--line-2);border-radius:var(--r);background:var(--bg-2)}
 .lock svg{width:22px;height:22px;flex:none;color:var(--accent)}.lock div{display:grid;gap:2px;flex:1}.lock b{font-size:14px}.lock span{font-size:12.5px;color:var(--fg-2)}
 @media (max-width:640px){.lock{flex-wrap:wrap}}
+
+/* ===== Загрузка: верхняя полоса и карточка прогресса ===== */
+#busybar{position:fixed;top:0;left:0;right:0;height:3px;z-index:200;overflow:hidden;opacity:0;transition:opacity .25s;pointer-events:none}
+body.busy #busybar{opacity:1}
+#busybar::before{content:'';position:absolute;top:0;bottom:0;width:30%;background:var(--accent);border-radius:0 3px 3px 0;animation:ldr-run 1.1s ease-in-out infinite}
+@keyframes ldr-run{0%{left:-30%}100%{left:100%}}
+.ldr{max-width:470px;margin:48px auto;padding:26px 24px 22px;background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);display:grid;gap:16px}
+.ldr-h{display:flex;align-items:center;gap:14px}
+.ldr-h svg{width:44px;height:44px;flex:none}
+.ldr-h b{display:block;font-size:17px;font-weight:650}
+.ldr-h span{display:block;font-size:12.5px;color:var(--fg-2);margin-top:2px}
+.ldr-bar{position:relative;height:8px;border-radius:99px;background:var(--bg-3);overflow:hidden}
+.ldr-bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;background:var(--accent);transition:width .3s ease}
+.ldr-bar.ind i{width:30%!important;animation:ldr-run 1.2s ease-in-out infinite}
+.ldr-meta{display:flex;justify-content:space-between;gap:10px;font:500 12px var(--font-mono);color:var(--fg-2);margin-top:-8px}
+.ldr-steps{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.ldr-steps li{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--fg-3)}
+.ldr-steps li::before{content:'';width:16px;height:16px;flex:none;border-radius:50%;border:2px solid var(--line-2);box-sizing:border-box}
+.ldr-steps li.s-run{color:var(--fg);font-weight:600}
+.ldr-steps li.s-run::before{border-color:var(--accent);border-right-color:transparent;animation:ldr-spin .8s linear infinite}
+.ldr-steps li.s-done{color:var(--fg-2)}
+.ldr-steps li.s-done::before{border:none;background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.5 8.3 2.3 2.2 4.7-5'/%3E%3C/svg%3E") center/16px no-repeat}
+.ldr-steps li.s-fail{color:var(--crit)}.ldr-steps li.s-fail::before{border-color:var(--crit)}
+.ldr-steps li small{margin-left:auto;font:500 11.5px var(--font-mono);color:var(--fg-3)}
+.ldr-note{font-size:12.5px;color:var(--fg-2);margin:0;min-height:1em}
+@keyframes ldr-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#busybar::before,.ldr-bar.ind i,.ldr-steps li.s-run::before{animation:none}.ldr-bar.ind i{width:100%!important;opacity:.35}}
 </style>
 
 <div class="app">
@@ -412,7 +439,7 @@ td[data-roof]{position:relative}td[data-roof=l1]::before{left:47px!important}td[
     <a href="#docs" data-nav="docs"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Документы</a>
   </div>
   <div class="grp"><span class="eyebrow">Управление</span>
-    <a href="#more/appeals" data-nav="more/appeals"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M12 8v3M12 13.5h.01"/></svg>Обращения<span class="cnt" id="cntAppeals"></span></a>
+    <a href="#more/appeals" data-nav="more/appeals"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M12 8v3M12 13.5h.01"/></svg>Обращения<span class="cnt" id="cntAppeals" hidden></span></a>
     <a href="#more/council" data-nav="more/council"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.5A5 5 0 0 1 22 19"/></svg>Совет дома и ОСС</a>
     <a href="#more/ideas" data-nav="more/ideas"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.6 1 1.3 1 2.5h6c0-1.2.3-1.9 1-2.5A6 6 0 0 0 12 3z"/></svg>Предложения</a>
     <a href="#more/directory" data-nav="more/directory"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Справочник</a>
@@ -459,6 +486,7 @@ td[data-roof]{position:relative}td[data-roof=l1]::before{left:47px!important}td[
   <div id="sheetBody"></div>
 </div>
 <div class="toast" id="toast"></div>
+<div id="busybar" aria-hidden="true"></div>
 
 <script>
 (function(){
@@ -1086,24 +1114,73 @@ function modelView(back){
 
 /* ================= API ================= */
 const NET_ERR='Нет связи с сервером кабинета. Проверьте интернет и нажмите ещё раз. Если в рабочей сети или VPN — попробуйте с телефона через мобильный интернет.';
-async function api(action,payload){
+let BUSY=0;function busy(d){BUSY=Math.max(0,BUSY+d);document.body.classList.toggle('busy',BUSY>0);}
+/* Чтение ответа с подсчётом байт: onProg(получено, ожидается, этап) */
+async function readBody(r,onProg,expect){
+  if(!onProg||!r.body||!r.body.getReader)return await r.text();
+  const rd=r.body.getReader(),parts=[];let n=0;const total=+(r.headers.get('content-length')||0)||expect||0;
+  onProg(0,total,'dl');
+  for(;;){const {done,value}=await rd.read();if(done)break;parts.push(value);n+=value.length;onProg(n,total,'dl');}
+  const all=new Uint8Array(n);let o=0;parts.forEach(p=>{all.set(p,o);o+=p.length;});
+  return new TextDecoder('utf-8').decode(all);
+}
+async function api(action,payload,onProg,expect){
   if(!API)throw new Error('Сервер кабинета ещё не подключён');
   const body=JSON.stringify(Object.assign({action,token:AUTH&&AUTH.token},payload||{}));
-  let r,j;
+  let r,j;busy(1);
+  try{
   for(let i=0;i<2;i++){
     try{r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body,redirect:'follow'});break;}
-    catch(e){if(i===1)throw new Error(NET_ERR);await new Promise(ok=>setTimeout(ok,1500));}
+    catch(e){if(i===1)throw new Error(NET_ERR);if(onProg)onProg(0,0,'retry');await new Promise(ok=>setTimeout(ok,1500));}
   }
-  try{j=await r.json();}catch(e){throw new Error('Сервер кабинета ответил не так, как ожидалось. Обновите страницу через минуту; если повторится — напишите председателю.');}
+  let txt;try{txt=await readBody(r,onProg,expect);}catch(e){throw new Error(NET_ERR);}
+  try{j=JSON.parse(txt);}catch(e){throw new Error('Сервер кабинета ответил не так, как ожидалось. Обновите страницу через минуту; если повторится — напишите председателю.');}
+  if(onProg)onProg(txt.length,txt.length,'parsed');
+  }finally{busy(-1);}
   if(!j.ok)throw new Error(j.error||'Ошибка сервера');
   if(j.renew&&AUTH){AUTH.token=j.renew;setSession(AUTH);}
   return j;
 }
 function setSession(a){AUTH=a;try{a?localStorage.setItem(SESSION_KEY,JSON.stringify(a)):localStorage.removeItem(SESSION_KEY);}catch(e){}}
-async function loadClosed(){
+/* ===== Карточка загрузки: этапы, полоса, байты и время ===== */
+const HOUSE_ICO='<svg viewBox="0 0 64 64" aria-hidden="true"><path fill="var(--accent)" d="M32 2.5 1.6 29.3c-1.5 1.3-.6 3.7 1.4 3.7H8v26a3 3 0 0 0 3 3h42a3 3 0 0 0 3-3V33h5c2 0 2.9-2.4 1.4-3.7z"/><text x="32" y="56" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="30" fill="#fff">9</text></svg>';
+const fmtMB=b=>(b/1048576).toFixed(b<1048576?2:1).replace('.',',')+' МБ';
+function loader(title,sub,steps){
+  view.innerHTML=`<div class="view"><div class="ldr" role="status" aria-live="polite"><div class="ldr-h">${HOUSE_ICO}<div><b>${esc(title)}</b><span>${esc(sub)}</span></div></div>
+    <div class="ldr-bar ind" id="ldrBar"><i></i></div><div class="ldr-meta"><span id="ldrL">Подключаемся…</span><span id="ldrR"></span></div>
+    <ul class="ldr-steps">${steps.map((t,i)=>`<li id="ldrS${i}">${esc(t)}<small></small></li>`).join('')}</ul><p class="ldr-note" id="ldrN"></p></div></div>`;
+  const t0=Date.now();let tick=null,stage=-1,w=0;
+  const L={
+    step(i,st,extra){const li=$('#ldrS'+i);if(!li)return;li.className='s-'+st;if(extra!=null)li.querySelector('small').textContent=extra;if(st==='run')stage=i;},
+    bar(f){const b=$('#ldrBar');if(!b)return;if(f==null){b.classList.add('ind');return;}b.classList.remove('ind');w=Math.max(w,Math.min(1,f));b.firstElementChild.style.width=(w*100).toFixed(1)+'%';$('#ldrR').textContent=Math.round(w*100)+' %';},
+    left(t){const e=$('#ldrL');if(e)e.textContent=t;},
+    note(t){const e=$('#ldrN');if(e)e.textContent=t||'';},
+    wait(label,usual){clearInterval(tick);const s0=Date.now();const up=()=>{const sec=Math.round((Date.now()-s0)/1000);L.left(label+(sec?' · '+sec+' с':''));
+        $('#ldrR').textContent=usual?'обычно до '+usual+' с':'';if(usual&&sec>usual*1.6)L.note('Сервер отвечает дольше обычного. Подождите ещё немного — страница откроется сама.');};up();tick=setInterval(up,1000);},
+    stop(){clearInterval(tick);},
+    elapsed(){return Date.now()-t0;}
+  };
+  return L;
+}
+function rememberN(k,v){try{localStorage.setItem('dom9.'+k,String(Math.round(v)));}catch(e){}}
+function recallN(k,d){try{return +(localStorage.getItem('dom9.'+k)||0)||d;}catch(e){return d;}}
+async function loadClosed(L,si){
   if(!AUTH)return;
-  try{const j=await api('data');applyData(j.data);if(j.user)AUTH=Object.assign(AUTH,j.user);recompute();}
-  catch(e){if(/сесси|token|Сесси/i.test(e.message)){setSession(null);toast('Сессия истекла — войдите снова');}}
+  const role=AUTH.role||'owner',kS='sz.'+role,kT='tm.'+role;const expect=recallN(kS,role==='owner'?120000:260000),usual=Math.max(4,Math.ceil(recallN(kT,6000)/1000));
+  const t0=Date.now();
+  if(L){L.step(si,'run');L.bar(null);L.wait('Сервер собирает данные',usual);}
+  try{
+    const j=await api('data',null,L?(n,tot,ph)=>{
+      if(ph==='retry'){L.note('Связь прервалась — пробуем ещё раз…');return;}
+      if(ph==='dl'){L.stop();const f=tot?Math.min(n/tot,0.98):0;L.bar(0.35+0.6*f);L.left('Получено '+fmtMB(n)+(tot?' из ~'+fmtMB(tot):''));}
+      if(ph==='parsed'){rememberN(kS,n);}
+    }:null,expect);
+    rememberN(kT,Date.now()-t0);
+    applyData(j.data);if(j.user)AUTH=Object.assign(AUTH,j.user);recompute();
+    if(L){L.stop();L.step(si,'done',((Date.now()-t0)/1000).toFixed(1).replace('.',',')+' с');if(isCouncil()&&$('#ldrS'+(si+1))){L.step(si+1,'done',CHESS?Object.keys(CHESS.units).length+' пом.':'');}L.bar(1);L.left('Готово');}
+  }
+  catch(e){if(L){L.stop();L.step(si,'fail');L.note(e.message);}
+    if(/сесси|token|Сесси/i.test(e.message)){setSession(null);toast('Сессия истекла — войдите снова');}}
 }
 function openLogin(){openSheet(`<p class="eyebrow">Кабинет собственника</p><h2>Вход</h2>${loginForm()}`);bindLogin();}
 function bindLogin(){
@@ -1121,7 +1198,7 @@ function bindLogin(){
     try{
       if(stage==='email'){const j=await api('login',{email});try{localStorage.setItem('dom9.lastEmail',email);}catch(e){}stage='code';$('#lfCodeF').hidden=false;if(j.needPin)$('#lfPinF').hidden=false;$('#lfEmail').readOnly=true;btn.textContent='Войти';$('#lfBack').hidden=false;$('#lfAccess').hidden=true;msg('Код отправлен на '+email+'. Он действует 10 минут. Нет письма за 2 минуты — проверьте «Спам» или нажмите «Другой e-mail».');$('#lfCode').focus();}
       else{const code=$('#lfCode').value.trim();if(code.length!==6){btn.textContent=label;msg('Введите 6 цифр из письма.',true);return;}
-        const j=await api('verify',{email,code,pin:$('#lfPin').value});setSession(j.session);closeSheet();await loadClosed();render(state.route||'home');updateTop();toast('Готово: вы вошли как '+ROLE_RU[AUTH.role]);}
+        const j=await api('verify',{email,code,pin:$('#lfPin').value});setSession(j.session);closeSheet();const L=loader('Открываем кабинет','Вход выполнен — загружаем данные дома',['Вход по коду','Финансы, работы, обращения, документы'].concat(/council|admin/.test(j.session.role)?['Совет: шахматка, контакты, проекты писем']:[]));L.step(0,'done');L.bar(0.3);await loadClosed(L,1);render(state.route||'home');updateTop();toast('Готово: вы вошли как '+ROLE_RU[AUTH.role]);}
     }catch(err){btn.textContent=label;msg(err.message,true);}finally{btn.disabled=false;}});
 }
 
@@ -1264,11 +1341,14 @@ $('#avatar').addEventListener('click',()=>go('more/profile'));$('#avatar').style
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1800);}
 /* ================= ЗАГРУЗКА: публичные данные → закрытые (по сессии) ================= */
 (async()=>{
-  view.innerHTML='<div class="view"><p class="muted" style="padding:40px 0">Загрузка данных дома…</p></div>';
-  try{const r=await fetch('data/public.json?v='+Date.now(),{cache:'no-store'});applyData(await r.json());}catch(e){view.innerHTML='<div class="view"><p class="muted" style="padding:40px 0">Не удалось загрузить данные. Обновите страницу.</p></div>';return;}
+  const cnl=AUTH&&/council|admin/.test(AUTH.role||'');
+  const L=loader(AUTH?'Открываем кабинет':'Открываем сайт дома',AUTH?(AUTH.name?AUTH.name+' · ':'')+'данные приходят с сервера кабинета':'Красная Пресня, 9',['Общие сведения о доме'].concat(AUTH?['Финансы, работы, обращения, документы']:[]).concat(cnl?['Совет: шахматка, контакты, проекты писем']:[]));
+  updateTop();L.step(0,'run');L.bar(0.05);L.left('Загружаем общие сведения');
+  try{const r=await fetch('data/public.json?v='+Date.now(),{cache:'no-store'});applyData(await r.json());}catch(e){L.step(0,'fail');L.note('Не удалось загрузить данные. Проверьте интернет и обновите страницу.');return;}
+  L.step(0,'done');L.bar(AUTH?0.3:1);
   if(!API&&window.DOM9_API)API=window.DOM9_API;
   recompute();
-  if(AUTH)await loadClosed();
+  if(AUTH)await loadClosed(L,1);
   {const ca=$('#cntAppeals');const n=isOwner()?APPEALS.filter(a=>a.st==='warn'||a.st==='crit').length:0;ca.textContent=n||'';ca.hidden=!n;}
   updateTop();
   render(location.hash.slice(1)||'home');
