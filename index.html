@@ -303,6 +303,9 @@ a.row{color:inherit;text-decoration:none}
 .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .field textarea{min-height:90px;resize:vertical}
 .done{padding:14px;border-radius:var(--r-s);background:var(--ok-soft);font-size:13.5px;display:grid;gap:6px}
+.done.bad{background:var(--crit-soft);color:var(--crit)}
+.role.cta{background:var(--accent);color:#fff;font-weight:600}
+.btn[disabled]{opacity:.7;cursor:progress}
 .note{font-size:12.5px;color:var(--fg-3);display:flex;gap:6px;align-items:flex-start}
 .note svg{width:14px;height:14px;flex:none;margin-top:2px}
 .callout{background:var(--accent-soft);border-radius:var(--r-s);padding:12px 14px;font-size:13px;display:flex;gap:10px;color:var(--fg)}
@@ -854,7 +857,7 @@ function moreView(sub){
     case 'appeals':return `<div class="view stagger">${back}<div class="page-head"><div><p class="eyebrow">Обращения и заявки</p><h1>Реестр обращений совета дома</h1><p class="lead">Публичная часть реестра без персональных данных заявителей: куда, когда и с каким результатом направлялся каждый вопрос.</p></div><div class="actions"><button class="btn btn-primary btn-sm" data-go="more/appeal">Сообщить о проблеме</button></div></div>
       <div class="card"><div class="rows">${APPEALS.map(a=>`<div class="row" data-appeal="${a.n}"><span class="t"><span class="mono small">${a.n}</span> · ${esc(a.what)}</span><span class="chip ${chip(a.st)}">${esc(a.stl)}</span><span class="d">${a.d} → ${esc(a.to)} · ${esc(a.cat)}</span></div>`).join('')}</div></div>
       <div class="actions" style="margin-top:14px"><a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="${folders.corr}">Папка переписки</a></div></div>`;
-    case 'appeal':return `<div class="view stagger">${back}<div class="page-head"><div><p class="eyebrow">Обращения и заявки</p><h1>Сообщить о проблеме</h1><p class="lead">Заявка получает номер, категорию, исполнителя и срок. В прототипе заявка формируется как текст для отправки совету дома.</p></div></div>
+    case 'appeal':return `<div class="view stagger">${back}<div class="page-head"><div><p class="eyebrow">Обращения и заявки</p><h1>Сообщить о проблеме</h1><p class="lead">Заявка уходит председателю совета дома с номером, категорией и местом. Авария, протечка, нет света или воды — сначала звоните в аварийную службу (раздел «Контакты»).</p></div></div>
       <form class="card form" id="appealForm" style="max-width:760px"><div class="grid g2"><div class="field"><label for="apCat">Категория</label><select id="apCat"><option>Кровля / протечки</option><option>Фасад</option><option>Подъезд</option><option>Лифт</option><option>Отопление, вода, канализация</option><option>Электрика</option><option>Уборка</option><option>Мусор</option><option>Двор / парковка</option><option>Шум</option><option>Безопасность</option><option>Другое</option></select></div>
       <div class="field"><label for="apTo">Получатель</label><select id="apTo"><option>Определить автоматически</option><option>УК — ГБУ «Жилищник»</option><option>Совет дома</option><option>Подрядчик по работам</option><option>ФКР</option><option>Мосжилинспекция</option></select></div></div>
       <div class="grid g3 keep2"><div class="field"><label for="apEnt">Подъезд</label><select id="apEnt"><option value="">—</option>${[1,2,3,4,5,6,7,8,9].map(n=>'<option>'+n+'</option>').join('')}</select></div><div class="field"><label for="apFloor">Этаж</label><select id="apFloor"><option value="">—</option>${[1,2,3,4,5,6,7].map(n=>'<option>'+n+'</option>').join('')}<option>чердак</option><option>подвал</option></select></div><div class="field"><label for="apUrg">Срочность</label><select id="apUrg"><option>Обычная</option><option>Срочно</option><option>Авария</option></select></div></div>
@@ -904,14 +907,15 @@ function profileView(back){
   const r=realRole();
   return `<div class="view stagger">${back}<div class="page-head"><div><p class="eyebrow">Личный кабинет</p><h1>${esc(AUTH.name||AUTH.email)}</h1><p class="lead">${AUTH.flat?'Кв. '+esc(AUTH.flat)+' · ':''}${ROLE_RU[r]} · ${esc(AUTH.email)}</p></div><div class="actions"><button class="btn btn-ghost btn-sm" id="logoutBtn">Выйти</button></div></div>
   <div class="grid g2">${(r==='admin'||r==='council')?`<div class="card"><div class="card-h"><h2>Посмотреть кабинет глазами</h2></div><p class="muted" style="font-size:13.5px">Проверка, что видит каждая роль. Данные не меняются.</p><div class="seg" style="margin-top:10px" id="roleSeg">${[['self','я'],['guest','гость'],['owner','собственник'],['council','совет дома']].map(x=>`<button data-role="${x[0]}" class="${(state.preview||'self')===x[0]?'on':''}">${x[1]}</button>`).join('')}</div></div>`:''}
-  <div class="card"><div class="card-h"><h2>Безопасность</h2></div><ul class="muted" style="margin:0;padding-left:18px;font-size:13.5px;display:grid;gap:4px"><li>Сессия действует 30 дней на этом устройстве; «Выйти» завершает её.</li><li>Реестр собственников используется только для проверки права; чужие ФИО, площади и доли не видны.</li><li>Администратор входит с кодом и личным PIN.</li></ul></div></div></div>`;
+  <div class="card"><div class="card-h"><h2>Безопасность</h2></div><ul class="muted" style="margin:0;padding-left:18px;font-size:13.5px;display:grid;gap:4px"><li>Вход сохраняется на этом устройстве на год и продлевается при каждом посещении; «Выйти» завершает его.</li><li>Реестр собственников используется только для проверки права; чужие ФИО, площади и доли не видны.</li><li>Администратор входит с кодом и личным PIN.</li></ul></div></div></div>`;
 }
 function loginForm(){return `<form class="card form" id="loginForm" style="max-width:520px">
   <div class="field" id="lfEmailF"><label for="lfEmail">E-mail</label><input id="lfEmail" type="email" autocomplete="email" required placeholder="name@mail.ru"></div>
   <div class="field" id="lfCodeF" hidden><label for="lfCode">Код из письма</label><input id="lfCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6 цифр"></div>
   <div class="field" id="lfPinF" hidden><label for="lfPin">PIN администратора · при первом входе — придумайте (6+ символов)</label><input id="lfPin" type="password" autocomplete="current-password"></div>
-  <div class="actions"><button class="btn btn-primary" type="submit" id="lfBtn">Получить код</button><button class="btn btn-ghost btn-sm" type="button" data-go="more/access">Меня нет в списке</button></div>
-  <div class="done" id="lfMsg" hidden></div></form>`;}
+  <div class="actions"><button class="btn btn-primary" type="submit" id="lfBtn">Получить код</button><button class="btn btn-ghost btn-sm" type="button" id="lfBack" hidden>Другой e-mail</button><button class="btn btn-ghost btn-sm" type="button" id="lfAccess" data-go="more/access">Меня нет в списке</button></div>
+  <div class="done" id="lfMsg" hidden></div>
+  <p class="small muted" style="margin:0">Вход нужен один раз: это устройство запомнит вас на год. Код придёт на e-mail, указанный в реестре собственников.</p></form>`;}
 function accessView(back){return `<div class="view stagger">${back}<div class="page-head"><div><p class="eyebrow">Доступ</p><h1>Запросить доступ к кабинету</h1><p class="lead">Председатель сверит данные с реестром собственников и откроет доступ. Данные используются только для проверки права.</p></div></div>
   <form class="card form" id="accessForm" style="max-width:620px"><div class="grid g2"><div class="field"><label for="acName">ФИО</label><input id="acName" required></div><div class="field"><label for="acFlat">Квартира / помещение</label><input id="acFlat" required></div></div>
   <div class="field"><label for="acEmail">E-mail для входа</label><input id="acEmail" type="email" required></div>
@@ -950,7 +954,7 @@ function guestHomeView(){
   const tiles=(ABOUT.tiles||[]).slice(0,8);
   return `<div class="view stagger">
   <div class="page-head"><div><p class="eyebrow">${todayRu()}</p><h1>Красная Пресня, 9</h1><p class="lead">${esc(LOCATION.district||'')}. Сайт совета многоквартирного дома.</p></div>
-    <div class="actions"><button class="btn btn-primary btn-sm" data-login>Войти собственнику</button></div></div>
+</div>
   <div class="grid g2">
     <div class="card"><div class="card-h"><h2>Расположение</h2></div>
       <p style="font-size:15px;margin:0 0 6px"><b>${esc(LOCATION.address||'')}</b></p><p class="muted" style="font-size:13.5px;margin:0">${esc(LOCATION.district||'')}</p>
@@ -1023,11 +1027,19 @@ function modelView(back){
 }
 
 /* ================= API ================= */
+const NET_ERR='Нет связи с сервером кабинета. Проверьте интернет и нажмите ещё раз. Если в рабочей сети или VPN — попробуйте с телефона через мобильный интернет.';
 async function api(action,payload){
   if(!API)throw new Error('Сервер кабинета ещё не подключён');
   const body=JSON.stringify(Object.assign({action,token:AUTH&&AUTH.token},payload||{}));
-  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body,redirect:'follow'});
-  const j=await r.json();if(!j.ok)throw new Error(j.error||'Ошибка сервера');return j;
+  let r,j;
+  for(let i=0;i<2;i++){
+    try{r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body,redirect:'follow'});break;}
+    catch(e){if(i===1)throw new Error(NET_ERR);await new Promise(ok=>setTimeout(ok,1500));}
+  }
+  try{j=await r.json();}catch(e){throw new Error('Сервер кабинета ответил не так, как ожидалось. Обновите страницу через минуту; если повторится — напишите председателю.');}
+  if(!j.ok)throw new Error(j.error||'Ошибка сервера');
+  if(j.renew&&AUTH){AUTH.token=j.renew;setSession(AUTH);}
+  return j;
 }
 function setSession(a){AUTH=a;try{a?localStorage.setItem(SESSION_KEY,JSON.stringify(a)):localStorage.removeItem(SESSION_KEY);}catch(e){}}
 async function loadClosed(){
@@ -1038,13 +1050,21 @@ async function loadClosed(){
 function openLogin(){openSheet(`<p class="eyebrow">Кабинет собственника</p><h2>Вход</h2>${loginForm()}`);bindLogin();}
 function bindLogin(){
   const f=$('#loginForm');if(!f||f.dataset.b)return;f.dataset.b=1;let stage='email';
-  const msg=t=>{const m=$('#lfMsg');m.textContent=t;m.hidden=!t;if(t)m.scrollIntoView({block:'center',behavior:'smooth'});};
-  f.addEventListener('submit',async e=>{e.preventDefault();const btn=$('#lfBtn');btn.disabled=true;msg('');
+  const msg=(t,bad)=>{const m=$('#lfMsg');m.textContent=t;m.hidden=!t;m.classList.toggle('bad',!!bad);if(t)m.scrollIntoView({block:'nearest',behavior:'smooth'});};
+  try{const le=localStorage.getItem('dom9.lastEmail');if(le)$('#lfEmail').value=le;}catch(e){}
+  setTimeout(()=>{const i=$('#lfEmail');if(i&&!i.value)i.focus();},250);
+  const toEmail=()=>{stage='email';$('#lfCodeF').hidden=true;$('#lfPinF').hidden=true;$('#lfEmail').readOnly=false;$('#lfBtn').textContent='Получить код';$('#lfBack').hidden=true;$('#lfAccess').hidden=false;msg('');$('#lfEmail').focus();};
+  $('#lfBack').addEventListener('click',toEmail);
+  $('#lfCode').addEventListener('input',e=>{const v=e.target.value.replace(/\D/g,'').slice(0,6);e.target.value=v;if(v.length===6&&$('#lfPinF').hidden)f.requestSubmit();});
+  f.addEventListener('submit',async e=>{e.preventDefault();const btn=$('#lfBtn');if(btn.disabled)return;const label=btn.textContent;btn.disabled=true;msg('');
+    const email=$('#lfEmail').value.trim().toLowerCase();
+    if(stage==='email'&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){btn.disabled=false;msg('Проверьте e-mail — в нём нет «@» или домена.',true);return;}
+    btn.textContent=stage==='email'?'Отправляем код…':'Проверяем…';
     try{
-      const email=$('#lfEmail').value.trim().toLowerCase();
-      if(stage==='email'){const j=await api('login',{email});stage='code';$('#lfCodeF').hidden=false;if(j.needPin)$('#lfPinF').hidden=false;$('#lfEmail').readOnly=true;btn.textContent='Войти';msg((j.message||'Код отправлен')+'. Код действует 10 минут.');$('#lfCode').focus();}
-      else{const j=await api('verify',{email,code:$('#lfCode').value.trim(),pin:$('#lfPin').value});setSession(j.session);closeSheet();await loadClosed();render(state.route||'home');updateTop();toast('Вы вошли: '+ROLE_RU[AUTH.role]);}
-    }catch(err){msg(err.message);toast(err.message);}finally{btn.disabled=false;}});
+      if(stage==='email'){const j=await api('login',{email});try{localStorage.setItem('dom9.lastEmail',email);}catch(e){}stage='code';$('#lfCodeF').hidden=false;if(j.needPin)$('#lfPinF').hidden=false;$('#lfEmail').readOnly=true;btn.textContent='Войти';$('#lfBack').hidden=false;$('#lfAccess').hidden=true;msg('Код отправлен на '+email+'. Он действует 10 минут. Нет письма за 2 минуты — проверьте «Спам» или нажмите «Другой e-mail».');$('#lfCode').focus();}
+      else{const code=$('#lfCode').value.trim();if(code.length!==6){btn.textContent=label;msg('Введите 6 цифр из письма.',true);return;}
+        const j=await api('verify',{email,code,pin:$('#lfPin').value});setSession(j.session);closeSheet();await loadClosed();render(state.route||'home');updateTop();toast('Готово: вы вошли как '+ROLE_RU[AUTH.role]);}
+    }catch(err){btn.textContent=label;msg(err.message,true);}finally{btn.disabled=false;}});
 }
 
 /* ================= ROUTER ================= */
@@ -1172,13 +1192,16 @@ function openAppeal(n){const a=APPEALS.find(x=>x.n===n);if(!a)return;
 
 /* ================= ROLE, TOAST, SCROLL ================= */
 function updateTop(){
-  const pv=AUTH&&state.preview&&state.preview!=='self'&&realRole()!=='owner';$('#roleName').textContent=AUTH?ROLE_RU[pv?viewRole():realRole()]:'Войти';$('#roleLong').textContent=AUTH?(pv?'Просмотр: ':'Роль: '):'';
+  const pv=AUTH&&state.preview&&state.preview!=='self'&&realRole()!=='owner';$('#roleName').textContent=AUTH?(pv?ROLE_RU[viewRole()]:''):'Войти';$('#roleLong').textContent=pv?'Просмотр: ':'';
+  $('#roleBtn').hidden=!!AUTH&&!pv;$('#roleBtn').classList.toggle('cta',!AUTH);$('#roleBtn').title=AUTH?'Вернуться к своей роли':'Вход для собственников';
+  const hp=document.querySelector('.side .help');if(hp)hp.hidden=!AUTH;const pl=document.querySelector('.side a[data-nav="more/profile"]');if(pl)pl.hidden=!AUTH;
   const al=$('#admLink');if(al)al.hidden=!isAdmin();
   document.querySelectorAll('.cnl').forEach(x=>x.hidden=!isCouncil());
   $('#roleBtn').classList.toggle('on',!!AUTH);const av=$('#avatar');
   if(AUTH){av.hidden=false;const n=(AUTH.name||AUTH.email||'?').split(/\s+/);av.textContent=(n[0][0]+(n[1]?n[1][0]:'')).toUpperCase();av.title=(AUTH.name||AUTH.email)+(AUTH.flat?' · кв. '+AUTH.flat:'');}else{av.hidden=true;}
 }
-$('#roleBtn').addEventListener('click',()=>{if(!AUTH){openLogin();}else{go('more/profile');}});
+$('#roleBtn').addEventListener('click',()=>{if(!AUTH){openLogin();}else{state.preview='self';save();updateTop();render(current||'home');toast('Обычный режим');}});
+$('#avatar').addEventListener('click',()=>go('more/profile'));$('#avatar').style.cursor='pointer';
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1800);}
 /* ================= ЗАГРУЗКА: публичные данные → закрытые (по сессии) ================= */
 (async()=>{
