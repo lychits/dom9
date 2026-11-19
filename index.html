@@ -379,6 +379,16 @@ a.row{color:inherit;text-decoration:none}
 .ch-porch{text-align:center;padding-top:6px!important}.ch-porch b{display:block;font-size:12px}.ch-porch span{font:400 10.5px var(--font-mono);color:var(--fg-3)}
 .ch-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--fg-2);margin-bottom:12px}.ch-legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-2px}.ch-legend i.ch-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);vertical-align:0}
 .ch-sub{font-size:12px;color:var(--fg-3);margin:16px 0 8px}.ch-nonres{display:flex;flex-wrap:wrap;gap:6px}
+.ch-grp{text-align:center;padding:0 0 6px!important;border-bottom:2px solid var(--line-2)}.ch-grp b{display:block;font-size:12.5px}.ch-grp span{display:block;font-size:11px;color:var(--fg-3);font-weight:500}
+.ch-void,.ch-vd{height:34px;border-radius:8px;background:repeating-linear-gradient(135deg,transparent 0 5px,var(--line) 5px 6px);opacity:.55}
+.ch-vd{display:inline-block;width:14px;height:10px;vertical-align:-1px;border-radius:3px}
+.ch-cell.wide{width:100%;min-width:46px}
+.ch-r-tw .ch-cell{border-radius:14px 14px 6px 6px;border:1.5px solid var(--accent)}
+.ch-r-m .ch-cell{border-radius:12px 12px 6px 6px;border:1px dashed var(--accent)}
+.ch-r-tw .ch-void,.ch-r-m .ch-void{background:none}
+.ch-r-b td{padding-top:8px}
+.ch-band{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;border-radius:10px;background:var(--bg-3)}.ch-band>span{font-size:11.5px;color:var(--fg-2);margin-right:4px}.ch-band .ch-cell{width:auto;padding:0 10px}
+.ch-band.one{padding:0;background:none;display:grid;gap:2px}.ch-band.one>span{font-size:10.5px;color:var(--fg-3);text-align:center}.ch-band.one .ch-cell{width:100%}
 .model-card{padding:0;overflow:hidden}.model-card iframe{display:block;width:100%;height:calc(100dvh - 240px);min-height:520px;border:0;background:var(--bg)}
 .lock{display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px dashed var(--line-2);border-radius:var(--r);background:var(--bg-2)}
 .lock svg{width:22px;height:22px;flex:none;color:var(--accent)}.lock div{display:grid;gap:2px;flex:1}.lock b{font-size:14px}.lock span{font-size:12.5px;color:var(--fg-2)}
@@ -993,10 +1003,32 @@ function chMatch(id){if(id==null)return false;const u=chUnit(id);
   if(String(id).toLowerCase()===q||String(id).toLowerCase().startsWith(q))return true;
   if(u&&u.owners.some(o=>o.name.toLowerCase().includes(q)))return true;
   return chContacts(id).some(c=>[c.name,c.email,c.role,c.note].some(v=>(v||'').toLowerCase().includes(q))||(qd.length>=4&&(c.phone||'').replace(/\D/g,'').includes(qd)));}
-function chCell(id){if(id==null)return '<td><div class="ch-cell c-empty"></div></td>';const on=(CH.q||CH.f!=='all');const hit=on&&chMatch(id),dim=on&&!chMatch(id);
-  const u=chUnit(id);const hasC=chContacts(id).length;
-  return `<td><button class="ch-cell ${chCls(id)} ${hit?'hit':''} ${dim?'dim':''}" data-apt="${id}" title="${u?esc(id+' · '+u.area+' м² · '+u.owners.map(o=>o.name).join(', ')):id+' · нет в реестре'}">${id}${hasC?'<i class="ch-ph"></i>':''}</button></td>`;}
-function chBoard(){const P=CHESS.porch;const groups=[[9,8],[6,5,4,7],[3,2,1]];let h='';
+function chLbl(id){return (CHESS.board&&CHESS.board.labels&&CHESS.board.labels[String(id)])||'';}
+function chBtn(id,extra){const on=(CH.q||CH.f!=='all');const hit=on&&chMatch(id),dim=on&&!chMatch(id);
+  const u=chUnit(id);const hasC=chContacts(id).length;const lb=chLbl(id);
+  return `<button class="ch-cell ${extra||''} ${chCls(id)} ${hit?'hit':''} ${dim?'dim':''}" data-apt="${esc(id)}" title="${esc((lb?lb+' · ':'')+(u?id+' · '+u.area+' м² · '+u.owners.map(o=>o.name).join(', '):id+' · нет в реестре'))}">${esc((CHESS.board&&CHESS.board.show&&CHESS.board.show[String(id)])||id)}${hasC?'<i class="ch-ph"></i>':''}</button>`;}
+function chCell(id,cs){if(id==null)return '<td><div class="ch-cell c-empty"></div></td>';return `<td${cs?' colspan="'+cs+'"':''}>${chBtn(id,cs?'wide':'')}</td>`;}
+function chBoard2(){const B=CHESS.board,P=CHESS.porch,G=B.groups;const LN={'Б':'башня','М':'манс.','П':'подв.'};
+  const spanAt=(lv,pp)=>B.spans.find(s=>s.lv===lv&&s.porches.includes(pp));
+  const w=g=>g.porches.length*3-1;
+  let h='<tr><th></th>'+G.map((g,gi)=>(gi?'<td class="ch-gap"></td>':'')+`<td colspan="${w(g)}" class="ch-grp"><b>${esc(g.name)}</b><span>${esc(g.note)}</span></td>`).join('')+'<th></th></tr>';
+  B.levels.forEach(L=>{const lv=L.k;const full=B.spans.find(s=>s.lv===lv&&s.porches.length===G.reduce((n,g)=>n+g.porches.length,0));
+    const cls=lv==='Б'?'ch-r-tw':lv==='М'?'ch-r-m':lv==='П'?'ch-r-b':'';
+    h+=`<tr class="${cls}"><th class="ch-fl" title="${esc(L.name)}">${LN[lv]||lv}</th>`;
+    if(full){h+=`<td colspan="${G.reduce((n,g)=>n+w(g),0)+G.length-1}"><div class="ch-band"><span>${esc(full.label)}</span>${full.ids.map(id=>chBtn(id,'wide')).join('')}</div></td>`;}
+    else G.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';let i=0;
+      while(i<g.porches.length){const pp=g.porches[i];if(i)h+='<td class="ch-pdiv"></td>';
+        const sp=spanAt(lv,pp);
+        if(sp){const n=sp.porches.filter(x=>g.porches.includes(x)).length;h+=`<td colspan="${n*3-1}"><div class="ch-band one">${chBtn(sp.id,'wide')}<span>${esc(sp.label)}</span></div></td>`;i+=n;continue;}
+        const a=(P[String(pp)]||{})[lv];
+        if(!a||!a.length)h+='<td colspan="2"><div class="ch-void"></div></td>';
+        else if(a.length===1)h+=chCell(a[0],2);
+        else a.forEach(id=>h+=chCell(id));
+        i++;}});
+    h+=`<th class="ch-fl">${LN[lv]||lv}</th></tr>`;});
+  h+='<tr><th></th>';G.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';g.porches.forEach((pp,pi)=>{if(pi)h+='<td class="ch-pdiv"></td>';const r=CHESS.porch_ranges[String(pp)]||['',''];h+=`<td colspan="2" class="ch-porch"><b>П${pp}</b><span>${r[0]}–${r[1]}</span></td>`;});});h+='<th></th></tr>';
+  return `<div class="ch-scroll"><table class="ch-grid">${h}</table></div>`;}
+function chBoard(){if(CHESS.board)return chBoard2();const P=CHESS.porch;const groups=[[9,8],[6,5,4,7],[3,2,1]];let h='';
   for(let fl=8;fl>=1;fl--){h+=`<tr><th class="ch-fl">${fl}</th>`;groups.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';g.forEach((pp,pi)=>{if(pi)h+='<td class="ch-pdiv"></td>';const pair=(P[String(pp)]||{})[String(fl)]||[null,null];pair.forEach(id=>h+=chCell(id));});});h+=`<th class="ch-fl">${fl}</th></tr>`;}
   h+='<tr><th></th>';groups.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';g.forEach((pp,pi)=>{if(pi)h+='<td class="ch-pdiv"></td>';const r=CHESS.porch_ranges[String(pp)]||['',''];h+=`<td colspan="2" class="ch-porch"><b>П${pp}</b><span>${r[0]}–${r[1]}</span></td>`;});});h+='<th></th></tr>';
   return `<div class="ch-scroll"><table class="ch-grid">${h}</table></div>`;}
@@ -1010,16 +1042,18 @@ function chessView(back){
   <div class="seg" id="chTabs" style="margin-top:14px"><button data-t="board" class="${CH.tab==='board'?'on':''}">Шахматка</button><button data-t="events" class="${CH.tab==='events'?'on':''}">Хронология собственников</button></div>
   ${CH.tab==='board'?`<div class="search" style="margin-top:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="chQ" type="search" placeholder="Квартира, ФИО, телефон, e-mail…" value="${esc(CH.q)}" autocomplete="off"></div>
   <div class="filters" id="chF">${[['all','Все'],['one','Один собственник'],['share','Долевые'],['gov','Город'],['cont','С контактами']].map(f=>`<button data-f="${f[0]}" class="${CH.f===f[0]?'on':''}">${f[1]}</button>`).join('')}</div>
-  <div class="card" style="margin-top:12px"><div class="ch-legend"><span><i class="c-one"></i>один собственник</span><span><i class="c-share"></i>несколько</span><span><i class="c-gov"></i>город</span><span><i class="c-miss"></i>нет в реестре</span><span><i class="ch-dot"></i>есть контакт</span></div>${chBoard()}
-    <div class="ch-sub">Нежилые помещения и надстройка</div><div class="ch-nonres">${CHESS.nonres.concat(CHESS.units['127']?['127']:[]).map(id=>{const on=(CH.q||CH.f!=='all');return `<button class="ch-cell wide ${chCls(id)} ${on&&chMatch(id)?'hit':''} ${on&&!chMatch(id)?'dim':''}" data-apt="${esc(id)}">${esc(id)}${chContacts(id).length?'<i class="ch-ph"></i>':''}</button>`;}).join('')}</div>
+  <div class="card" style="margin-top:12px"><div class="ch-legend"><span><i class="c-one"></i>один собственник</span><span><i class="c-share"></i>несколько</span><span><i class="c-gov"></i>город</span><span><i class="c-miss"></i>нет в реестре</span><span><i class="ch-dot"></i>есть контакт</span>${CHESS.board?'<span><i class="ch-vd"></i>нет этажа</span>':''}</div>${chBoard()}
+    ${CHESS.board?'':`<div class="ch-sub">Нежилые помещения и надстройка</div>`}<div class="ch-nonres" ${CHESS.board?'hidden':''}>${CHESS.nonres.concat(CHESS.units['127']?['127']:[]).map(id=>{const on=(CH.q||CH.f!=='all');return `<button class="ch-cell wide ${chCls(id)} ${on&&chMatch(id)?'hit':''} ${on&&!chMatch(id)?'dim':''}" data-apt="${esc(id)}">${esc(id)}${chContacts(id).length?'<i class="ch-ph"></i>':''}</button>`;}).join('')}</div>
     ${others.length?`<div class="ch-sub">Контакты без квартиры</div><div class="rows">${others.map(k=>chContacts(k).map(c=>`<div class="row" style="cursor:default"><span class="t">${esc(c.name)}</span><span class="chip plain">${esc(k)}</span><span class="d">${c.phone?`<a href="tel:${esc(String(c.phone).replace(/[^+\d]/g,''))}">${esc(c.phone)}</a>`:''} ${esc(c.role||'')}</span></div>`).join('')).join('')}</div>`:''}
     <p class="note" style="margin-top:12px">${infoIcon}<span>${esc(CHESS.meta.layout_note||'')}</span></p></div>`
-  :`<div class="card" style="margin-top:12px"><div class="rows">${CHESS.events.map(e=>`<div class="row" data-apt="${esc(e.apt)}"><span class="t">Кв. ${esc(e.apt)} · ${esc(e.kind)}</span><span class="chip info">П${esc(e.porch)} · ${esc(e.floor)} эт.</span><span class="d">${esc(e.when||e.period||'')} · было: ${esc(e.was)} → стало: ${esc(e.now)}${e.comment?' · '+esc(e.comment):''}</span></div>`).join('')}</div></div>`}
+  :`<div class="card" style="margin-top:12px"><div class="rows">${CHESS.events.map(e=>`<div class="row" data-apt="${esc(e.apt)}"><span class="t">Кв. ${esc(e.apt)} · ${esc(e.kind)}</span><span class="chip info">П${esc(e.porch)} · ${/^\d+$/.test(String(e.floor))?esc(e.floor)+' эт.':esc(e.floor)}</span><span class="d">${esc(e.when||e.period||'')} · было: ${esc(e.was)} → стало: ${esc(e.now)}${e.comment?' · '+esc(e.comment):''}</span></div>`).join('')}</div></div>`}
   <p class="note" style="margin-top:12px">${infoIcon}<span>Персональные данные собственников и жителей. Используются советом дома только для подготовки ОСС и связи с собственниками (ст. 45–48 ЖК РФ); не пересылайте и не публикуйте.</span></p></div>`;
 }
 function openApt(id){const u=chUnit(id);const cs=chContacts(id);const ev=(CHESS.events||[]).filter(e=>String(e.apt)===String(id));
   const ix=Object.entries(CHESS.porch).find(([pp,fls])=>Object.values(fls).some(pr=>pr.map(String).includes(String(id))));
-  openSheet(`<p class="eyebrow">${ix?'Подъезд '+ix[0]:'Помещение'}${u?' · '+esc(u.kind):''}</p><h2>${/^\d+$/.test(id)?'Квартира ':''}${esc(id)}</h2>
+  const lv=ix?Object.entries(ix[1]).find(([k,pr])=>pr.map(String).includes(String(id)))[0]:null;const LVN={'Б':'башня (надстроенный этаж)','М':'мансарда','П':'подвал'};
+  const lb=chLbl(id);
+  openSheet(`<p class="eyebrow">${ix?'Подъезд '+ix[0]+(lv?' · '+(LVN[lv]||lv+' этаж'):''):'Помещение'}${u?' · '+esc(u.kind):''}${lb?' · '+esc(lb):''}</p><h2>${/^\d+$/.test(id)?'Квартира ':''}${esc(id)}</h2>
   ${u?`<span class="chip ${chCls(id)==='c-share'?'warn':chCls(id)==='c-gov'?'plain':'ok'}">${u.area} м² · ${u.owners.length} ${u.owners.length===1?'собственник':'собственника'}</span>
   <h3 style="margin:14px 0 8px">Собственники по реестру</h3><div class="rows">${u.owners.map(o=>`<div class="row" style="cursor:default"><span class="t">${esc(o.name)}</span><span class="chip plain">${o.share?Math.round(o.share*1000)/10+' %':esc(o.form)}</span><span class="d">${esc(o.form)}${o.area?' · '+o.area+' м²':''}${o.title?' · '+esc(o.title):''}</span></div>`).join('')}</div>`:'<p class="muted">В реестре собственников этого помещения нет.</p>'}
   <h3 style="margin:14px 0 8px">Контакты</h3>${cs.length?`<div class="rows">${cs.map(c=>`<div class="row" style="cursor:default"><span class="t">${esc(c.name)}</span>${c.role?`<span class="chip info">${esc(c.role)}</span>`:'<span></span>'}<span class="d">${c.phone?`<a href="tel:${esc(String(c.phone).replace(/[^+\d]/g,''))}">${esc(c.phone)}</a> · `:''}${c.email?`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a> · `:''}${/^@/.test(c.note||'')?`<a target="_blank" rel="noopener" href="https://t.me/${esc(c.note.slice(1))}">${esc(c.note)}</a>`:esc(c.note||'')}${c.added?' · добавлено '+esc(c.added):''}</span></div>`).join('')}</div>`:'<p class="muted">Контактов нет.</p>'}
