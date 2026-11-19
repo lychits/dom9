@@ -368,7 +368,8 @@ a.row{color:inherit;text-decoration:none}
 .ch-grid{border-collapse:separate;border-spacing:3px;margin:0 auto}
 .ch-grid td,.ch-grid th{padding:0}
 .ch-fl{font:500 11px var(--font-mono);color:var(--fg-3);width:22px;text-align:center}
-.ch-gap{width:18px}.ch-pdiv{width:6px}
+.ch-gap{width:18px}.ch-pdiv0{width:7px}
+.ch-pdiv{width:7px;background:linear-gradient(var(--line-2),var(--line-2)) center/1px 100% no-repeat}
 .ch-cell{position:relative;width:46px;height:34px;border:1px solid transparent;border-radius:8px;font:600 12.5px var(--font);color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s,box-shadow .12s,opacity .12s}
 .ch-cell:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
 .ch-cell.wide{width:auto;min-width:64px;padding:0 10px;height:32px;font-size:12px}
@@ -381,7 +382,11 @@ a.row{color:inherit;text-decoration:none}
 .ch-legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--fg-2);margin-bottom:12px}.ch-legend i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-2px}.ch-legend i.ch-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);vertical-align:0}
 .ch-sub{font-size:12px;color:var(--fg-3);margin:16px 0 8px}.ch-nonres{display:flex;flex-wrap:wrap;gap:6px}
 .ch-grp{text-align:center;padding:0 0 6px!important;border-bottom:2px solid var(--line-2)}.ch-grp b{display:block;font-size:12.5px}.ch-grp span{display:block;font-size:11px;color:var(--fg-3);font-weight:500}
-.ch-void,.ch-vd{height:34px;border-radius:8px;background:repeating-linear-gradient(135deg,transparent 0 5px,var(--line) 5px 6px);opacity:.55}
+.ch-void{height:34px}
+td[data-roof]{position:relative}td[data-roof=l1]::before{left:47px!important}td[data-roof=r1]::before{right:47px!important}td[data-roof]::before{content:'';position:absolute;left:-2px;right:-2px;top:-6px;height:3px;border-radius:2px;background:var(--fg)}
+.ch-lg-roof{width:16px!important;height:3px!important;border-radius:2px!important;background:var(--fg-2);vertical-align:3px!important}
+.ch-lg-m{border:1px dashed var(--accent);border-radius:6px 6px 3px 3px!important}.ch-lg-tw{border:1.5px solid var(--accent);border-radius:7px 7px 3px 3px!important}
+.ch-lg-pd{width:1px!important;height:14px!important;border-radius:0!important;background:var(--line-2);margin:0 8px 0 4px!important}
 .ch-vd{display:inline-block;width:14px;height:10px;vertical-align:-1px;border-radius:3px}
 .ch-cell.wide{width:100%;min-width:46px}
 .ch-r-tw .ch-cell{border-radius:14px 14px 6px 6px;border:1.5px solid var(--accent)}
@@ -390,7 +395,7 @@ a.row{color:inherit;text-decoration:none}
 .ch-r-b td{padding-top:8px}
 .ch-band{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;border-radius:10px;background:var(--bg-3)}.ch-band>span{font-size:11.5px;color:var(--fg-2);margin-right:4px}.ch-band .ch-cell{width:auto;padding:0 10px}
 .ch-multi{display:flex;gap:3px}.ch-multi .ch-cell{flex:1;min-width:0;padding:0 4px}
-.ch-r-b .ch-cell{font-size:12px}
+.ch-r-b .ch-cell,.ch-band.one .ch-cell{font-size:11px;line-height:1.1;white-space:normal;text-align:center;padding:0 4px}
 .ch-attic{height:34px;display:grid;place-items:center;border-radius:12px 12px 6px 6px;border:1px dashed var(--line-2);color:var(--fg-3);font-size:11.5px}
 .ch-band.one{padding:0;background:none;display:grid;gap:2px}.ch-band.one>span{font-size:10.5px;color:var(--fg-3);text-align:center}.ch-band.one .ch-cell{width:100%}
 .model-card{padding:0;overflow:hidden}.model-card iframe{display:block;width:100%;height:calc(100dvh - 240px);min-height:520px;border:0;background:var(--bg)}
@@ -1012,28 +1017,34 @@ function chBtn(id,extra){const on=(CH.q||CH.f!=='all');const hit=on&&chMatch(id)
   const u=chUnit(id);const hasC=chContacts(id).length;const lb=chLbl(id);
   return `<button class="ch-cell ${extra||''} ${chCls(id)} ${hit?'hit':''} ${dim?'dim':''}" data-apt="${esc(id)}" title="${esc((lb?lb+' · ':'')+(u?id+' · '+u.area+' м² · '+u.owners.map(o=>o.name).join(', '):id+' · нет в реестре'))}">${esc((CHESS.board&&CHESS.board.show&&CHESS.board.show[String(id)])||id)}${hasC?'<i class="ch-ph"></i>':''}</button>`;}
 function chCell(id,cs){if(id==null)return '<td><div class="ch-cell c-empty"></div></td>';return `<td${cs?' colspan="'+cs+'"':''}>${chBtn(id,cs?'wide':'')}</td>`;}
-function chBoard2(){const B=CHESS.board,P=CHESS.porch,G=B.groups;const LN={'Б':'башня','М':'манс.','П':'подв.'};
+function chBoard2(){const B=CHESS.board,P=CHESS.porch,G=B.groups;const LN={'Б':'башня','М':'манс.','П':'подв.'},RN=Object.assign({},LN,B.rightNames||{});
   const spanAt=(lv,pp)=>B.spans.find(s=>s.lv===lv&&s.porches.includes(pp));
-  const w=g=>g.porches.length*3-1;
+  const w=g=>g.porches.length*3-1;const roof=B.roof||{};
+  const PD='<td class="ch-pdiv"></td>';
   let h='<tr><th></th>'+G.map((g,gi)=>(gi?'<td class="ch-gap"></td>':'')+`<td colspan="${w(g)}" class="ch-grp"><b>${esc(g.name)}</b><span>${esc(g.note)}</span></td>`).join('')+'<th></th></tr>';
-  B.levels.forEach(L=>{const lv=L.k;const full=B.spans.find(s=>s.lv===lv&&s.porches.length===G.reduce((n,g)=>n+g.porches.length,0));
+  B.levels.forEach(L=>{const lv=L.k;
     const cls=lv==='Б'?'ch-r-tw':lv==='М'?'ch-r-m':lv==='П'?'ch-r-b':'';
     h+=`<tr class="${cls}"><th class="ch-fl" title="${esc(L.name)}">${LN[lv]||lv}</th>`;
-    if(full){h+=`<td colspan="${G.reduce((n,g)=>n+w(g),0)+G.length-1}"><div class="ch-band"><span>${esc(full.label)}</span>${full.ids.map(id=>chBtn(id,'wide')).join('')}</div></td>`;}
-    else G.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';
+    G.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';let seg='';
       const cu=B.custom&&B.custom[lv]&&B.custom[lv][String(gi)];
-      if(cu){cu.forEach(x=>{h+=x.id!=null?chCell(x.id,x.cs>1?x.cs:0).replace('<button class="ch-cell ','<button class="ch-cell wide '):x.ids?`<td colspan="${x.cs}"><div class="ch-multi">${x.ids.map(id=>chBtn(id,'wide')).join('')}</div></td>`:`<td colspan="${x.cs}"></td>`;});return;}
-      let i=0;
-      while(i<g.porches.length){const pp=g.porches[i];if(i)h+='<td class="ch-pdiv"></td>';
+      let cuRoof=false;
+      if(cu){const isR=roof[String(gi)]===lv;cuRoof=isR;cu.forEach(x=>{let td=x.id!=null?chCell(x.id,x.cs>1?x.cs:0).replace('<button class="ch-cell ','<button class="ch-cell wide '):x.ids?`<td colspan="${x.cs}"><div class="ch-multi">${x.ids.map(id=>chBtn(id,'wide')).join('')}</div></td>`:(x.cs===1?PD:`<td colspan="${x.cs}"></td>`);
+        if(isR&&x.roof!=='none')td=td.replace(/^<td/,'<td data-roof'+(x.roof?'="'+x.roof+'"':''));seg+=td;});}
+      else{let i=0;
+      while(i<g.porches.length){const pp=g.porches[i];if(i)seg+=PD;
         const sp=spanAt(lv,pp);
-        if(sp){const n=sp.porches.filter(x=>g.porches.includes(x)).length;h+=sp.id?`<td colspan="${n*3-1}"><div class="ch-band one">${chBtn(sp.id,'wide')}${sp.label?`<span>${esc(sp.label)}</span>`:''}</div></td>`:`<td colspan="${n*3-1}"><div class="ch-attic">${esc(sp.label)}</div></td>`;i+=n;continue;}
+        if(sp){const n=sp.porches.filter(x=>g.porches.includes(x)).length;seg+=sp.id?`<td colspan="${n*3-1}"><div class="ch-band one">${chBtn(sp.id,'wide')}</div></td>`:`<td colspan="${n*3-1}"><div class="ch-attic">${esc(sp.label||'')}</div></td>`;i+=n;continue;}
         const a=(P[String(pp)]||{})[lv];
-        if(!a||!a.length)h+='<td colspan="2"><div class="ch-void"></div></td>';
-        else if(a.length===1)h+=chCell(a[0],2);
-        else a.forEach(id=>h+=chCell(id));
-        i++;}});
-    h+=`<th class="ch-fl">${LN[lv]||lv}</th></tr>`;});
-  h+='<tr><th></th>';G.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';g.porches.forEach((pp,pi)=>{if(pi)h+='<td class="ch-pdiv"></td>';const r=CHESS.porch_ranges[String(pp)]||['',''];h+=`<td colspan="2" class="ch-porch"><b>П${pp}</b><span>${r[0]}–${r[1]}</span></td>`;});});h+='<th></th></tr>';
+        if(!a||!a.length)seg+='<td colspan="2"><div class="ch-void"></div></td>';
+        else if(a.length===1)seg+=chCell(a[0],2);
+        else a.forEach(id=>seg+=chCell(id));
+        i++;}}
+      if(lv==='Б'||!/<button/.test(seg))seg=seg.replace(/ch-pdiv/g,'ch-pdiv0');
+      if(roof[String(gi)]===lv&&!cuRoof)seg=seg.replace(/<td(?=[ >])/g,'<td data-roof');
+      else if(lv==='Б')seg=seg.replace(/<td((?:(?!<td).)*?<button)/g,'<td data-roof$1');
+      h+=seg;});
+    h+=`<th class="ch-fl" title="${esc(L.name)}">${RN[lv]||lv}</th></tr>`;});
+  h+='<tr><th></th>';G.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';g.porches.forEach((pp,pi)=>{if(pi)h+=PD;const r=CHESS.porch_ranges[String(pp)]||['',''];h+=`<td colspan="2" class="ch-porch"><b>П${pp}</b><span>${r[0]}–${r[1]}</span></td>`;});});h+='<th></th></tr>';
   return `<div class="ch-scroll"><table class="ch-grid">${h}</table></div>`;}
 function chBoard(){if(CHESS.board)return chBoard2();const P=CHESS.porch;const groups=[[9,8],[6,5,4,7],[3,2,1]];let h='';
   for(let fl=8;fl>=1;fl--){h+=`<tr><th class="ch-fl">${fl}</th>`;groups.forEach((g,gi)=>{if(gi)h+='<td class="ch-gap"></td>';g.forEach((pp,pi)=>{if(pi)h+='<td class="ch-pdiv"></td>';const pair=(P[String(pp)]||{})[String(fl)]||[null,null];pair.forEach(id=>h+=chCell(id));});});h+=`<th class="ch-fl">${fl}</th></tr>`;}
@@ -1049,7 +1060,7 @@ function chessView(back){
   <div class="seg" id="chTabs" style="margin-top:14px"><button data-t="board" class="${CH.tab==='board'?'on':''}">Шахматка</button><button data-t="events" class="${CH.tab==='events'?'on':''}">Хронология собственников</button></div>
   ${CH.tab==='board'?`<div class="search" style="margin-top:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="chQ" type="search" placeholder="Квартира, ФИО, телефон, e-mail…" value="${esc(CH.q)}" autocomplete="off"></div>
   <div class="filters" id="chF">${[['all','Все'],['one','Один собственник'],['share','Долевые'],['gov','Город Москва'],['oi','Общее имущество'],['cont','С контактами']].map(f=>`<button data-f="${f[0]}" class="${CH.f===f[0]?'on':''}">${f[1]}</button>`).join('')}</div>
-  <div class="card" style="margin-top:12px"><div class="ch-legend"><span><i class="c-one"></i>один собственник</span><span><i class="c-share"></i>несколько</span><span><i class="c-com"></i>нежилое частное</span><span><i class="c-gov"></i>г. Москва</span><span><i class="c-oi"></i>общее имущество</span><span><i class="c-miss"></i>нет в реестре</span><span><i class="ch-dot"></i>есть контакт</span>${CHESS.board?'<span><i class="ch-vd"></i>нет этажа</span>':''}</div>${chBoard()}
+  <div class="card" style="margin-top:12px">${chBoard()}<div class="ch-legend" style="margin:14px 0 0"><span><i class="c-one"></i>один собственник</span><span><i class="c-share"></i>несколько</span><span><i class="c-com"></i>нежилое частное</span><span><i class="c-gov"></i>г. Москва</span><span><i class="c-oi"></i>общее имущество</span><span><i class="c-miss"></i>нет в реестре</span><span><i class="ch-dot"></i>есть контакт</span>${CHESS.board?'<span><i class="ch-lg-roof"></i>крыша</span><span><i class="ch-lg-m"></i>мансарда</span><span><i class="ch-lg-tw"></i>башня</span><span><i class="ch-lg-pd"></i>граница подъездов</span>':''}</div>
     ${CHESS.board?'':`<div class="ch-sub">Нежилые помещения и надстройка</div>`}<div class="ch-nonres" ${CHESS.board?'hidden':''}>${CHESS.nonres.concat(CHESS.units['127']?['127']:[]).map(id=>{const on=(CH.q||CH.f!=='all');return `<button class="ch-cell wide ${chCls(id)} ${on&&chMatch(id)?'hit':''} ${on&&!chMatch(id)?'dim':''}" data-apt="${esc(id)}">${esc(id)}${chContacts(id).length?'<i class="ch-ph"></i>':''}</button>`;}).join('')}</div>
     ${others.length?`<div class="ch-sub">Контакты без квартиры</div><div class="rows">${others.map(k=>chContacts(k).map(c=>`<div class="row" style="cursor:default"><span class="t">${esc(c.name)}</span><span class="chip plain">${esc(k)}</span><span class="d">${c.phone?`<a href="tel:${esc(String(c.phone).replace(/[^+\d]/g,''))}">${esc(c.phone)}</a>`:''} ${esc(c.role||'')}</span></div>`).join('')).join('')}</div>`:''}
     <p class="note" style="margin-top:12px">${infoIcon}<span>${esc(CHESS.meta.layout_note||'')}</span></p></div>`
