@@ -311,6 +311,11 @@ a.row{color:inherit;text-decoration:none}
 .side a.lk::after{content:'';width:13px;height:13px;margin-left:auto;background:currentColor;opacity:.55;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center/contain no-repeat}
 .dock button.lk::after{content:'';position:absolute;top:5px;right:calc(50% - 19px);width:11px;height:11px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center/contain no-repeat}
 .menu button.lk .arr::before{content:'';display:inline-block;margin-right:6px;vertical-align:-1px;opacity:.6;width:11px;height:11px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E") center/contain no-repeat}
+.vsw{display:flex;align-items:center;gap:8px}.vsw-l{font-size:11.5px;color:var(--fg-3);white-space:nowrap}
+#viewSel{display:none;font:500 12.5px var(--font);padding:6px 10px;border-radius:999px;border:1px solid var(--line-2);background:var(--bg-2);color:var(--fg)}
+@media (max-width:980px){.vsw .seg,.vsw-l{display:none}#viewSel{display:block}}
+.pvb{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:8px 16px;background:var(--warn-soft);color:var(--fg);font-size:13px;border-bottom:1px solid var(--line)}
+.pvb b{font-weight:650}.pvb .btn{background:var(--bg-2)}
 .done.bad{background:var(--crit-soft);color:var(--crit)}
 .role.cta{background:var(--accent);color:#fff;font-weight:600}
 .btn[disabled]{opacity:.7;cursor:progress}
@@ -462,11 +467,13 @@ body.busy #busybar{opacity:1}
     <span class="crumbs" id="crumbs">Главная</span>
     <div class="top-search" data-go="docs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Поиск по документам<kbd>⌘K</kbd></div>
     <div class="user">
+      <div class="vsw" id="viewSw" hidden><span class="vsw-l">Смотреть как</span><div class="seg" id="viewSeg"></div><select id="viewSel" aria-label="Смотреть сайт как"></select></div>
       <button class="role" id="roleBtn" title="Вход и роль"><span class="long" id="roleLong"></span><span id="roleName">Войти</span></button>
       <span class="avatar" id="avatar" hidden></span>
     </div>
   </div>
 </header>
+<div class="pvb" id="pvBanner" hidden><span id="pvText"></span><button class="btn btn-sm" id="pvBack">Вернуться к своему виду</button></div>
 <main id="view" aria-live="polite"></main>
 </div>
 </div>
@@ -1328,14 +1335,22 @@ function openAppeal(n){const a=APPEALS.find(x=>x.n===n);if(!a)return;
 /* ================= ROLE, TOAST, SCROLL ================= */
 function updateTop(){
   const pv=AUTH&&state.preview&&state.preview!=='self'&&realRole()!=='owner';$('#roleName').textContent=AUTH?(pv?ROLE_RU[viewRole()]:''):'Войти';$('#roleLong').textContent=pv?'Просмотр: ':'';
-  $('#roleBtn').hidden=!!AUTH&&!pv;$('#roleBtn').classList.toggle('cta',!AUTH);$('#roleBtn').title=AUTH?'Вернуться к своей роли':'Вход для собственников';
+  const adm=realRole()==='admin';const cur=state.preview||'self';
+  const sw=$('#viewSw');if(sw){sw.hidden=!adm;if(adm){const V=VIEWS;$('#viewSeg').innerHTML=V.map(v=>`<button data-view="${v[0]}" class="${cur===v[0]?'on':''}" title="${v[1]}">${v[1]}</button>`).join('');$('#viewSel').innerHTML=V.map(v=>`<option value="${v[0]}" ${cur===v[0]?'selected':''}>${v[1]}</option>`).join('');}}
+  const pb=$('#pvBanner');if(pb){const on=adm&&cur!=='self';pb.hidden=!on;if(on){const D={council:'видно всё, кроме администрирования',owner:'видны финансы, работы, обращения и документы; шахматка, контакты и проекты писем скрыты',guest:'без входа: только общие сведения о доме'};$('#pvText').innerHTML='Вы смотрите сайт как <b>'+esc(ROLE_RU[cur])+'</b> — '+esc(D[cur]||'');}}
+  $('#roleBtn').hidden=!!AUTH&&(!pv||adm);$('#roleBtn').classList.toggle('cta',!AUTH);$('#roleBtn').title=AUTH?'Вернуться к своей роли':'Вход для собственников';
   document.querySelectorAll('.side a[data-nav],.dock button[data-go]').forEach(x=>{const r=x.dataset.nav||x.dataset.go;const lk=!isOwner()&&!!GUEST_LOCKED[r];x.classList.toggle('lk',lk);if(lk)x.title='Доступно собственникам после входа';else x.removeAttribute('title');});
   const hp=document.querySelector('.side .help');if(hp)hp.hidden=!AUTH;const pl=document.querySelector('.side a[data-nav="more/profile"]');if(pl)pl.hidden=!AUTH;
-  const al=$('#admLink');if(al)al.hidden=!isAdmin();
+  const al=$('#admLink');if(al)al.hidden=!isAdmin()||(state.preview&&state.preview!=='self');
   document.querySelectorAll('.cnl').forEach(x=>x.hidden=!isCouncil());
   $('#roleBtn').classList.toggle('on',!!AUTH);const av=$('#avatar');
   if(AUTH){av.hidden=false;const n=(AUTH.name||AUTH.email||'?').split(/\s+/);av.textContent=(n[0][0]+(n[1]?n[1][0]:'')).toUpperCase();av.title=(AUTH.name||AUTH.email)+(AUTH.flat?' · кв. '+AUTH.flat:'');}else{av.hidden=true;}
 }
+const VIEWS=[['self','Администратор','Я'],['council','Совет дома','Совет'],['owner','Собственник','Собств.'],['guest','Гость','Гость']];
+function setView(v){state.preview=v;save();updateTop();render(current||'home');toast(v==='self'?'Обычный вид администратора':'Вид: '+ROLE_RU[v]);}
+$('#viewSeg').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)setView(b.dataset.view);});
+$('#viewSel').addEventListener('change',e=>setView(e.target.value));
+$('#pvBack').addEventListener('click',()=>setView('self'));
 $('#roleBtn').addEventListener('click',()=>{if(!AUTH){openLogin();}else{state.preview='self';save();updateTop();render(current||'home');toast('Обычный режим');}});
 $('#avatar').addEventListener('click',()=>go('more/profile'));$('#avatar').style.cursor='pointer';
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),1800);}
